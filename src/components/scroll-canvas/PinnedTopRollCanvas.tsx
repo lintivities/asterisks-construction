@@ -110,6 +110,7 @@ export function PinnedTopRollCanvas() {
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const shadowRef = useRef<HTMLDivElement>(null);
+  const wrapShieldRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -150,13 +151,13 @@ export function PinnedTopRollCanvas() {
     fillLight.position.set(-300, -100, 250);
     scene.add(fillLight);
 
-    // Load authentic paper textures: front matching unfolded canvas, back from public/paper-back.jpg
+    // Load authentic paper textures: master front matching unfolded canvas, back from public/paper-back.jpg
     const textureLoader = new THREE.TextureLoader();
     const backPaperTexture = textureLoader.load("/paper-back.jpg");
     backPaperTexture.wrapS = THREE.ClampToEdgeWrapping;
     backPaperTexture.wrapT = THREE.ClampToEdgeWrapping;
 
-    const frontPaperTexture = textureLoader.load("/paper-front.jpg");
+    const frontPaperTexture = textureLoader.load("/master-parchment-front.jpg");
     frontPaperTexture.wrapS = THREE.ClampToEdgeWrapping;
     frontPaperTexture.wrapT = THREE.ClampToEdgeWrapping;
 
@@ -199,6 +200,18 @@ export function PinnedTopRollCanvas() {
         containerRef.current.style.height = `${containerH}px`;
       }
 
+      // Proportional coil radius (~4.5% of width, bounded between 28px and 44px)
+      const baseRadius = Math.max(28.0, Math.min(44.0, canvasW * 0.045));
+      const foldLipY = Math.round(baseRadius * 2.3);
+
+      // Position the opaque paper wrap shield behind the roll to completely occlude scrolling content under the fold
+      if (wrapShieldRef.current) {
+        wrapShieldRef.current.style.top = `${rollTop}px`;
+        wrapShieldRef.current.style.left = `${canvasLeft}px`;
+        wrapShieldRef.current.style.width = `${canvasW}px`;
+        wrapShieldRef.current.style.height = `${foldLipY}px`;
+      }
+
       // Position the contact shadow element to match the canvas folio precisely
       if (shadowRef.current) {
         shadowRef.current.style.top = `${rollTop}px`;
@@ -216,8 +229,6 @@ export function PinnedTopRollCanvas() {
       camera.bottom = -containerH * 0.5;
       camera.updateProjectionMatrix();
 
-      // Proportional coil radius (~4.5% of width, bounded between 28px and 44px)
-      const baseRadius = Math.max(28.0, Math.min(44.0, canvasW * 0.045));
       const topY = containerH * 0.5;
       const Y_pin = topY - (baseRadius * 1.15);
 
@@ -279,6 +290,9 @@ export function PinnedTopRollCanvas() {
         const rollTop = Math.max(0, r.top);
         containerRef.current.style.top = `${rollTop}px`;
         shadowRef.current.style.top = `${rollTop}px`;
+        if (wrapShieldRef.current) {
+          wrapShieldRef.current.style.top = `${rollTop}px`;
+        }
       }
     };
 
@@ -322,6 +336,21 @@ export function PinnedTopRollCanvas() {
 
   return (
     <>
+      {/* Opaque Paper Wrap Shield: Physically occludes and wraps scrolling page content underneath the fold */}
+      <div
+        ref={wrapShieldRef}
+        className="fixed pointer-events-none overflow-hidden"
+        style={{
+          zIndex: 35,
+          backgroundColor: "#faf9f6",
+          backgroundImage: "url('/paper-back.jpg')",
+          backgroundSize: "cover",
+          backgroundPosition: "center top",
+          boxShadow: "0 16px 22px -4px rgba(0, 0, 0, 0.28)",
+        }}
+        aria-hidden="true"
+      />
+
       {/* Pinned 3D Roll Canvas strictly constrained to #paper-canvas-folio */}
       <div
         ref={containerRef}

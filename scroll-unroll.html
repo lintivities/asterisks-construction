@@ -799,10 +799,6 @@
         const centerOffsetY = (1.0 - currentProgress) * (planeHeight * 0.5);
         scrollMesh.position.y = centerOffsetY;
 
-        // Subtle ambient breathing motion
-        const t = clock.getElapsedTime();
-        scrollMesh.position.y += Math.sin(t * 0.8) * 0.012;
-
         renderer.render(scene, camera);
       }
 

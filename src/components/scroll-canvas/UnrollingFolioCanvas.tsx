@@ -379,12 +379,6 @@ export function UnrollingFolioCanvas() {
         progressFillRef.current.style.width = `${percent.toFixed(1)}%`;
       }
 
-      // Subtle ambient breathing motion
-      const t = clock.getElapsedTime();
-      if (scrollMesh) {
-        scrollMesh.rotation.y = Math.sin(t * 0.4) * 0.003;
-      }
-
       renderer.render(scene, camera);
     };
 

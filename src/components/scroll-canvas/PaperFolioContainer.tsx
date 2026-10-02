@@ -16,11 +16,11 @@ export function PaperFolioContainer({ children }: PaperFolioContainerProps) {
         id="paper-canvas-folio"
         className="relative mx-auto w-full max-w-[1560px] min-h-screen bg-[#faf9f6] text-[#111827] shadow-[0_30px_70px_-15px_rgba(0,0,0,0.24)] border border-[#111827]/20 overflow-hidden"
       >
-        {/* Authentic Paper Texture matching the Rolling Paper (public/paper-front.jpg) */}
+        {/* Authentic Master Parchment Texture matching the Folding Roll */}
         <div
-          className="absolute inset-0 pointer-events-none -z-0 opacity-30 mix-blend-multiply bg-cover bg-top"
+          className="absolute inset-0 pointer-events-none -z-0 opacity-35 mix-blend-multiply bg-cover bg-top"
           style={{
-            backgroundImage: "url('/paper-front.jpg')",
+            backgroundImage: "url('/master-parchment-front.jpg')",
           }}
           aria-hidden="true"
         />
