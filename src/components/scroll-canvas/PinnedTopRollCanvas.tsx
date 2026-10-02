@@ -87,26 +87,22 @@ const rollFragmentShader = /* glsl */ `
 
     float diff = max(dot(vNormal, L), 0.0);
     float wrapDiff = max(0.0, (dot(vNormal, L) + 0.35) / 1.35);
-    float spec = pow(max(dot(vNormal, H), 0.0), 20.0) * 0.05;
+    float spec = pow(max(dot(vNormal, H), 0.0), 20.0) * 0.04;
     vec3 totalLight = uAmbientColor + uLightColor * (diff * 0.45 + wrapDiff * 0.25) + vec3(spec);
 
     if (!gl_FrontFacing) {
-      // Back underside interior of cylinder roll with torn edge discarding
+      // Back underside interior of cylinder roll using public/paper-back.jpg
       vec2 backUv = vec2(1.0 - vUv.x, vUv.y);
-      vec4 backTex = texture2D(uBackTexture, backUv);
-      if (backTex.a < 0.20) discard;
-
-      vec3 backPaper = backTex.rgb * 0.90;
-      gl_FragColor = vec4(backPaper * totalLight, vAlpha * backTex.a);
+      vec3 backPaper = texture2D(uBackTexture, backUv).rgb;
+      // Soft interior cylinder depth shadowing
+      backPaper *= 0.90;
+      gl_FragColor = vec4(backPaper * totalLight, vAlpha);
       return;
     }
 
-    // Front tactile surface of roll with authentic torn paper texture from images.jpg
-    vec4 frontTex = texture2D(uFrontTexture, vUv);
-    if (frontTex.a < 0.20) discard;
-
-    vec3 frontPaper = frontTex.rgb;
-    gl_FragColor = vec4(frontPaper * totalLight, vAlpha * frontTex.a);
+    // Front tactile surface of roll using public/paper-front.jpg - same texture as unfolded canvas
+    vec3 frontPaper = texture2D(uFrontTexture, vUv).rgb;
+    gl_FragColor = vec4(frontPaper * totalLight, vAlpha);
   }
 `;
 
@@ -142,29 +138,25 @@ export function PinnedTopRollCanvas() {
     camera.position.set(0, 0, 500);
     camera.lookAt(0, 0, 0);
 
-    // Studio lighting creating 3D roll depth
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.72);
+    // Studio lighting calibrated to match the unfolded canvas brightness seamlessly
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.82);
     scene.add(ambientLight);
 
-    const keyLight = new THREE.DirectionalLight(0xffffff, 0.55);
+    const keyLight = new THREE.DirectionalLight(0xffffff, 0.45);
     keyLight.position.set(300, 200, 350);
     scene.add(keyLight);
 
-    const fillLight = new THREE.DirectionalLight(0xfef3c7, 0.25);
+    const fillLight = new THREE.DirectionalLight(0xfef3c7, 0.20);
     fillLight.position.set(-300, -100, 250);
     scene.add(fillLight);
 
-    // Load authentic torn paper textures extracted from public/images.jpg
+    // Load authentic paper textures: front matching unfolded canvas, back from public/paper-back.jpg
     const textureLoader = new THREE.TextureLoader();
-    const backPaperTexture = textureLoader.load(
-      "/assets/textures/roll-torn-paper-back.png"
-    );
+    const backPaperTexture = textureLoader.load("/paper-back.jpg");
     backPaperTexture.wrapS = THREE.ClampToEdgeWrapping;
     backPaperTexture.wrapT = THREE.ClampToEdgeWrapping;
 
-    const frontPaperTexture = textureLoader.load(
-      "/assets/textures/roll-torn-paper.png"
-    );
+    const frontPaperTexture = textureLoader.load("/paper-front.jpg");
     frontPaperTexture.wrapS = THREE.ClampToEdgeWrapping;
     frontPaperTexture.wrapT = THREE.ClampToEdgeWrapping;
 
@@ -181,8 +173,8 @@ export function PinnedTopRollCanvas() {
         uFrontTexture: { value: frontPaperTexture },
         uBackTexture: { value: backPaperTexture },
         uLightPos: { value: new THREE.Vector3(300, 180, 350) },
-        uLightColor: { value: new THREE.Vector3(0.48, 0.48, 0.48) },
-        uAmbientColor: { value: new THREE.Vector3(0.72, 0.72, 0.72) },
+        uLightColor: { value: new THREE.Vector3(0.35, 0.35, 0.35) },
+        uAmbientColor: { value: new THREE.Vector3(0.82, 0.82, 0.82) },
       },
     });
 
