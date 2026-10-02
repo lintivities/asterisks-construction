@@ -2,13 +2,13 @@ import React, { useEffect, useRef } from "react";
 import * as THREE from "three";
 
 /**
- * Highly Prominent 3D Pinned Archimedean Spiral Roll in Three.js
- * - Positioned visibly at the top of the screen hanging down into the viewport
+ * 3D Pinned Archimedean Spiral Roll in Three.js
+ * - Constrained strictly to the width and position of #paper-canvas-folio (NO viewport overflow)
  * - Thick, multi-turn spiral parchment roll with rich tactile relief
  * - Spins and unrolls dynamically in real-time as the user scrolls
  * - Dual textures: front crumpled texture with directional studio lighting,
  *   interior back crumpled texture with cylinder depth shadowing.
- * - Casts a deep realistic drop shadow over the paper sheet below.
+ * - Sized and positioned dynamically with ResizeObserver to match the canvas perfectly.
  */
 
 const rollVertexShader = /* glsl */ `
@@ -21,7 +21,6 @@ const rollVertexShader = /* glsl */ `
   varying vec3 vPosition;
   varying vec3 vNormal;
   varying float vAlpha;
-  varying float vDepth;
 
   void main() {
     vUv = uv;
@@ -55,13 +54,11 @@ const rollVertexShader = /* glsl */ `
       // Normal rotated around X axis following cylinder curvature
       n = vec3(0.0, -sin(theta), cos(theta));
       vAlpha = 1.0;
-      vDepth = pos.z;
     } else {
       // Flat lip extending slightly downwards into the page with soft gradient blend
       pos.z = 0.35 * (1.0 + s / 0.5);
       n = vec3(0.0, 0.0, 1.0);
       vAlpha = smoothstep(0.0, 0.4, 0.4 + s);
-      vDepth = pos.z;
     }
 
     vPosition = (modelMatrix * vec4(pos, 1.0)).xyz;
@@ -81,7 +78,6 @@ const rollFragmentShader = /* glsl */ `
   varying vec3 vPosition;
   varying vec3 vNormal;
   varying float vAlpha;
-  varying float vDepth;
 
   void main() {
     if (vAlpha <= 0.02) discard;
@@ -100,7 +96,6 @@ const rollFragmentShader = /* glsl */ `
       vec2 backUv = vec2(1.0 - vUv.x, vUv.y);
       vec3 backPaper = texture2D(uBackTexture, backUv).rgb;
       backPaper = pow(backPaper, vec3(1.25));
-      // Subtle interior shadow inside cylinder roll
       backPaper *= 0.88;
       gl_FragColor = vec4(backPaper * totalLight, vAlpha);
       return;
@@ -142,7 +137,7 @@ export function PinnedTopRollCanvas() {
     camera.position.set(0, 0, 7.0);
     camera.lookAt(0, 0, 0);
 
-    // Dynamic studio key light creating deep 3D roll curvature
+    // Studio lighting creating 3D roll depth
     const ambientLight = new THREE.AmbientLight(0xffffff, 0.7);
     scene.add(ambientLight);
 
@@ -199,12 +194,31 @@ export function PinnedTopRollCanvas() {
       const visibleHeight = 2 * Math.tan(vFovRad / 2) * camera.position.z;
       const visibleWidth = visibleHeight * camera.aspect;
 
+      // Measure the exact position and width of #paper-canvas-folio
+      const paperEl = document.getElementById("paper-canvas-folio");
+      let worldWidth = visibleWidth;
+      let worldCenterX = 0;
+
+      if (paperEl && w > 0) {
+        const rect = paperEl.getBoundingClientRect();
+        // Convert screen pixel width to Three.js world units
+        worldWidth = (rect.width / w) * visibleWidth;
+        // Calculate center X offset in Three.js coordinates
+        const canvasCenterScreenX = rect.left + rect.width * 0.5;
+        worldCenterX = ((canvasCenterScreenX / w) - 0.5) * visibleWidth;
+
+        // Position and size the contact shadow element to match the canvas precisely
+        if (shadowRef.current) {
+          shadowRef.current.style.width = `${rect.width}px`;
+          shadowRef.current.style.left = `${rect.left}px`;
+        }
+      }
+
       // Prominent coil radius (~8.5% of visible screen height)
       const baseRadius = visibleHeight * 0.085;
       const topScreenY = visibleHeight * 0.5;
       const Y_pin = topScreenY - (baseRadius * 1.05);
 
-      // Substantial sheet length rolled into the cylinder (multi-turn spiral)
       const rollSheetLength = 2.8;
       const lipLength = 0.5;
       const totalH = rollSheetLength + lipLength;
@@ -213,17 +227,17 @@ export function PinnedTopRollCanvas() {
         mesh.geometry.dispose();
       }
 
-      // High-density subdivision for super smooth 3D curved cylinder
+      // Geometry width EXACTLY matches the padded paper canvas - zero overflow to the viewport sides
       const geometry = new THREE.PlaneGeometry(
-        visibleWidth * 1.06,
+        worldWidth,
         totalH,
         180,
         360
       );
-      // Position plane centered on Y_pin
       geometry.translate(0, Y_pin + (rollSheetLength - lipLength) * 0.5, 0);
 
       mesh = new THREE.Mesh(geometry, shaderMaterial);
+      mesh.position.x = worldCenterX;
       scene.add(mesh);
 
       const uniforms = shaderMaterial.uniforms;
@@ -233,6 +247,17 @@ export function PinnedTopRollCanvas() {
     }
 
     window.addEventListener("resize", updateDimensions);
+
+    // ResizeObserver on the paper canvas element to guarantee 1:1 width sync
+    let resizeObserver: ResizeObserver | null = null;
+    const paperEl = document.getElementById("paper-canvas-folio");
+    if (paperEl && typeof ResizeObserver !== "undefined") {
+      resizeObserver = new ResizeObserver(() => {
+        updateDimensions();
+      });
+      resizeObserver.observe(paperEl);
+    }
+
     updateDimensions();
 
     // Scroll progress driver (Tracks standard window scroll)
@@ -280,6 +305,7 @@ export function PinnedTopRollCanvas() {
       cancelAnimationFrame(animationFrameId);
       window.removeEventListener("resize", updateDimensions);
       window.removeEventListener("scroll", handleScroll);
+      if (resizeObserver) resizeObserver.disconnect();
       if (mesh) mesh.geometry.dispose();
       shaderMaterial.dispose();
       frontPaperTexture.dispose();
@@ -294,20 +320,20 @@ export function PinnedTopRollCanvas() {
       <div
         className="fixed inset-0 w-screen h-screen z-40 pointer-events-none overflow-hidden"
         style={{
-          filter: "drop-shadow(0 24px 28px rgba(0, 0, 0, 0.28))",
+          filter: "drop-shadow(0 22px 26px rgba(0, 0, 0, 0.26))",
         }}
         aria-hidden="true"
       >
         <canvas ref={canvasRef} className="w-full h-full block" />
       </div>
 
-      {/* Deep Contact Shadow Beneath Pinned Roll Cast Downward onto Content */}
+      {/* Deep Contact Shadow Exactly Matched to the Paper Canvas Width */}
       <div
         ref={shadowRef}
-        className="fixed top-0 left-0 w-full h-28 pointer-events-none z-30 transition-opacity duration-150"
+        className="fixed top-0 pointer-events-none z-30 transition-opacity duration-150 h-28"
         style={{
           background:
-            "linear-gradient(to bottom, rgba(17, 24, 39, 0.42) 0%, rgba(17, 24, 39, 0.16) 45%, transparent 100%)",
+            "linear-gradient(to bottom, rgba(17, 24, 39, 0.38) 0%, rgba(17, 24, 39, 0.14) 45%, transparent 100%)",
         }}
         aria-hidden="true"
       />

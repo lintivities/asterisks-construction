@@ -11,13 +11,51 @@ export function PaperFolioContainer({ children }: PaperFolioContainerProps) {
 
   return (
     <div className="relative w-full min-h-screen bg-[#edece8] py-4 sm:py-8 px-2 sm:px-4 md:px-8 overflow-x-hidden">
-      {/* Central Architectural Parchment Paper Folio */}
-      <div className="relative mx-auto w-full max-w-[1560px] min-h-screen bg-[#faf9f6] text-[#111827] shadow-[0_30px_70px_-15px_rgba(0,0,0,0.22)] border border-[#111827]/25 rounded-[2px]">
-        {/* Subtle Tactile Crumpled Paper Texture Overlay */}
+      {/* Central Architectural Parchment Paper Folio with Authentic Deckled Torn Edges */}
+      <div
+        id="paper-canvas-folio"
+        className="relative mx-auto w-full max-w-[1560px] min-h-screen bg-[#faf9f6] text-[#111827] shadow-[0_30px_70px_-15px_rgba(0,0,0,0.24)] border border-[#111827]/20"
+      >
+        {/* Authentic Torn/Deckled Paper Edge Strips from public/images.jpg */}
+        {/* Left Torn Edge */}
         <div
-          className="absolute inset-0 pointer-events-none -z-0 opacity-15 mix-blend-multiply bg-repeat bg-contain"
+          className="absolute -left-3.5 sm:-left-4.5 top-0 bottom-0 w-8 sm:w-10 pointer-events-none z-20 bg-repeat-y"
           style={{
-            backgroundImage: "url('/assets/textures/paper-front.jpg')",
+            backgroundImage: "url('/assets/textures/torn-edge-left.png')",
+            backgroundPosition: "left top",
+            backgroundSize: "36px auto",
+          }}
+          aria-hidden="true"
+        />
+
+        {/* Right Torn Edge */}
+        <div
+          className="absolute -right-3.5 sm:-right-4.5 top-0 bottom-0 w-8 sm:w-10 pointer-events-none z-20 bg-repeat-y"
+          style={{
+            backgroundImage: "url('/assets/textures/torn-edge-right.png')",
+            backgroundPosition: "right top",
+            backgroundSize: "36px auto",
+          }}
+          aria-hidden="true"
+        />
+
+        {/* Bottom Torn Edge */}
+        <div
+          className="absolute -bottom-3 sm:-bottom-4 left-0 right-0 h-7 sm:h-9 pointer-events-none z-20 bg-repeat-x"
+          style={{
+            backgroundImage: "url('/assets/textures/torn-edge-bottom.png')",
+            backgroundPosition: "center bottom",
+            backgroundSize: "auto 36px",
+          }}
+          aria-hidden="true"
+        />
+
+        {/* Natural Paper Fiber Grain Texture from public/images.jpg */}
+        <div
+          className="absolute inset-0 pointer-events-none -z-0 opacity-25 mix-blend-multiply bg-repeat"
+          style={{
+            backgroundImage: "url('/assets/textures/paper-grain.jpg')",
+            backgroundSize: "320px auto",
           }}
           aria-hidden="true"
         />
