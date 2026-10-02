@@ -1,15 +1,17 @@
 /**
- * GLSL Shaders from scroll-unroll.html.
+ * GLSL Shaders for Asterisk Construction 3D Pinned Scroll-Unroll Experience.
  * Features:
- * - Full-screen Archimedean spiral curl line along Y axis
- * - Dual crumpled paper texture maps (front + back) with calibrated lighting
- * - Multiply blend with dynamic architectural folio canvas
+ * - Top-edge pinned Archimedean spiral roll (Y_pin = +visibleHeight * 0.5)
+ * - Continuous downward paper feed as user scrolls through the folio
+ * - Dual texture mapping: Front crumpled paper texture + website canvas,
+ *   Back crumpled paper texture from stock video with 3D cylinder lighting.
  */
 
 export const vertexShader = /* glsl */ `
   uniform float uProgress;
   uniform float uPlaneHeight;
   uniform float uPlaneWidth;
+  uniform float uVisibleHeight;
   uniform float uBaseRadius;
   uniform float uSpiralFactor;
 
@@ -20,29 +22,41 @@ export const vertexShader = /* glsl */ `
   void main() {
     vUv = uv;
 
-    // Rolling boundary curl line along Y:
-    // At progress 0.02, curlY is near bottom (-0.5 * H) -> sheet curled into cylinder
-    // At progress 1.0, curlY reaches top (+0.5 * H) -> entire sheet flat across screen
-    float curlY = -uPlaneHeight * 0.5 + (uPlaneHeight * uProgress);
+    // Pin line anchored at the top of the visible screen
+    float Y_pin = uVisibleHeight * 0.5;
+
+    // As user scrolls, paper feeds downward out of the top roll
+    // At uProgress = 0.0: document is coiled at Y_pin
+    // At uProgress = 1.0: entire document has fed through and unrolled flat
+    float totalFeed = (uPlaneHeight - uVisibleHeight);
+    float feedOffset = uProgress * totalFeed;
+
+    // Linear unrolled position along vertical axis before curling:
+    // Top of plane starts at Y_pin and feeds downward
+    float flatY = position.y - (uPlaneHeight * 0.5) + Y_pin + feedOffset;
 
     vec3 pos = position;
     vec3 n = normal;
 
-    if (pos.y <= curlY) {
-      // 1. Flat unrolled section flush with screen:
+    if (flatY <= Y_pin) {
+      // 1. Unrolled section: flat in front of the camera
+      pos.y = flatY;
       pos.z = 0.0;
       n = vec3(0.0, 0.0, 1.0);
     } else {
-      // 2. Curled top roll (Archimedean spiral cylinder along X axis):
-      float s = pos.y - curlY;
-      float R = uBaseRadius + uSpiralFactor * s;
-      float theta = s / R;
+      // 2. Coiled section pinned at top edge (Archimedean spiral cylinder along X axis)
+      float s = flatY - Y_pin;
+      
+      // At the very bottom of scroll (uProgress > 0.96), uncurl the remaining roll
+      float uncurlFactor = smoothstep(0.96, 1.0, uProgress);
+      float R = mix(uBaseRadius + uSpiralFactor * s, uBaseRadius * 4.0, uncurlFactor);
+      float theta = mix(s / R, 0.0, uncurlFactor);
 
-      float y_curl = curlY + sin(theta) * R;
+      float y_curl = Y_pin + sin(theta) * R;
       float z_curl = (1.0 - cos(theta)) * R;
 
-      pos.y = y_curl;
-      pos.z = z_curl;
+      pos.y = mix(y_curl, flatY, uncurlFactor);
+      pos.z = mix(z_curl, 0.0, uncurlFactor);
 
       // Rotated normal around X axis
       n = vec3(0.0, -sin(theta), cos(theta));

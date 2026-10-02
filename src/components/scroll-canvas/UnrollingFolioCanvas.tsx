@@ -1,7 +1,26 @@
 import React, { useEffect, useRef } from "react";
 import * as THREE from "three";
 import { vertexShader, fragmentShader } from "./shaders";
-import { createOffscreenDocumentCanvas } from "./texture-generator";
+import {
+  createPixelPerfectFolioCanvas,
+  ImageAssets,
+} from "./texture-generator";
+
+import heroImg from "@/assets/hero-site.jpg";
+import towersImg from "@/assets/project-towers.jpg";
+import resortImg from "@/assets/project-resort.jpg";
+import bustaniImg from "@/assets/project-bustani.jpg";
+import villaImg from "@/assets/project-villa.jpg";
+
+function preloadImage(src: string): Promise<HTMLImageElement> {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    img.onload = () => resolve(img);
+    img.onerror = () => resolve(img);
+    img.src = src;
+  });
+}
 
 export function UnrollingFolioCanvas() {
   const mountRef = useRef<HTMLDivElement>(null);
@@ -14,7 +33,7 @@ export function UnrollingFolioCanvas() {
     if (!canvasElement) return;
 
     /* ==========================================================================
-       THREE.JS SETUP & LIGHTING (FROM SCROLL-UNROLL.HTML)
+       THREE.JS SETUP & LIGHTING
        ========================================================================== */
     const renderer = new THREE.WebGLRenderer({
       canvas: canvasElement,
@@ -24,7 +43,7 @@ export function UnrollingFolioCanvas() {
     });
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.setSize(window.innerWidth, window.innerHeight);
-    renderer.setClearColor(0xffffff, 1.0); // Solid pure white
+    renderer.setClearColor(0xffffff, 1.0); // Solid pure white viewport background
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
     renderer.toneMappingExposure = 1.0;
 
@@ -40,7 +59,6 @@ export function UnrollingFolioCanvas() {
     camera.position.set(0, 0, 7.0);
     camera.lookAt(0, 0, 0);
 
-    // Studio lighting calibrated to preserve contrast
     const ambientLight = new THREE.AmbientLight(0xffffff, 0.7);
     scene.add(ambientLight);
 
@@ -53,7 +71,7 @@ export function UnrollingFolioCanvas() {
     scene.add(fillLight);
 
     /* ==========================================================================
-       TEXTURE LOADING: CRUMPLED PAPER MAPS (FRONT & BACK)
+       CRUMPLED PAPER TEXTURE LOADING
        ========================================================================== */
     const textureLoader = new THREE.TextureLoader();
 
@@ -76,16 +94,17 @@ export function UnrollingFolioCanvas() {
     frontPaperTexture.magFilter = THREE.LinearFilter;
 
     /* ==========================================================================
-       SHADER MATERIAL WITH ARCHIMEDEAN SPIRAL ROLL
+       SHADER MATERIAL: TOP-PINNED ARCHIMEDEAN SPIRAL
        ========================================================================== */
     const shaderMaterial = new THREE.ShaderMaterial({
       vertexShader,
       fragmentShader,
       side: THREE.DoubleSide,
       uniforms: {
-        uProgress: { value: 0.03 },
+        uProgress: { value: 0.0 },
         uPlaneHeight: { value: 1.0 },
         uPlaneWidth: { value: 1.0 },
+        uVisibleHeight: { value: 1.0 },
         uBaseRadius: { value: 0.28 },
         uSpiralFactor: { value: 0.024 },
         uContentTexture: { value: null },
@@ -101,6 +120,7 @@ export function UnrollingFolioCanvas() {
     let planeHeight = 1;
     let contentTexture: THREE.CanvasTexture | null = null;
     let scrollMesh: THREE.Mesh | null = null;
+    let loadedImages: ImageAssets = {};
 
     function updateDimensions() {
       const w = window.innerWidth;
@@ -115,9 +135,8 @@ export function UnrollingFolioCanvas() {
       const visibleHeight = 2 * Math.tan(vFovRad / 2) * camera.position.z;
       const visibleWidth = visibleHeight * camera.aspect;
 
-      // Make the scroll page fit the whole screen
       planeWidth = visibleWidth;
-      planeHeight = visibleHeight;
+      planeHeight = visibleHeight * 4.6; // Extended plane height to feed full website
 
       if (scrollMesh) {
         scrollMesh.geometry.dispose();
@@ -125,14 +144,14 @@ export function UnrollingFolioCanvas() {
           planeWidth,
           planeHeight,
           160,
-          480
+          640
         );
       } else {
         const geometry = new THREE.PlaneGeometry(
           planeWidth,
           planeHeight,
           160,
-          480
+          640
         );
         scrollMesh = new THREE.Mesh(geometry, shaderMaterial);
         scene.add(scrollMesh);
@@ -141,27 +160,59 @@ export function UnrollingFolioCanvas() {
       const uniforms = shaderMaterial.uniforms;
       if (uniforms["uPlaneWidth"]) uniforms["uPlaneWidth"].value = planeWidth;
       if (uniforms["uPlaneHeight"]) uniforms["uPlaneHeight"].value = planeHeight;
+      if (uniforms["uVisibleHeight"])
+        uniforms["uVisibleHeight"].value = visibleHeight;
       if (uniforms["uBaseRadius"])
         uniforms["uBaseRadius"].value = visibleHeight * 0.055;
 
-      // Regenerate offscreen architectural folio canvas texture to match aspect ratio
+      // Regenerate offscreen architectural folio canvas texture
       const texW = 2048;
-      const texH = Math.round(2048 / camera.aspect);
+      const texH = 8600;
       if (contentTexture) contentTexture.dispose();
-      contentTexture = createOffscreenDocumentCanvas(texW, texH);
+      contentTexture = createPixelPerfectFolioCanvas(
+        texW,
+        texH,
+        loadedImages
+      );
       if (uniforms["uContentTexture"]) {
         uniforms["uContentTexture"].value = contentTexture;
       }
     }
 
+    // Preload project & hero photography asynchronously
+    let isDisposed = false;
+    Promise.all([
+      preloadImage(heroImg),
+      preloadImage(towersImg),
+      preloadImage(resortImg),
+      preloadImage(bustaniImg),
+      preloadImage(villaImg),
+    ]).then(([hero, towers, resort, bustani, villa]) => {
+      if (isDisposed) return;
+      loadedImages = { hero, towers, resort, bustani, villa };
+      const texW = 2048;
+      const texH = 8600;
+      if (contentTexture) contentTexture.dispose();
+      contentTexture = createPixelPerfectFolioCanvas(
+        texW,
+        texH,
+        loadedImages
+      );
+      if (shaderMaterial.uniforms["uContentTexture"]) {
+        shaderMaterial.uniforms["uContentTexture"].value = contentTexture;
+      }
+    });
+
     window.addEventListener("resize", updateDimensions);
     updateDimensions();
 
     /* ==========================================================================
-       MULTI-MODAL SCROLL ENGINE (INVERTED SCROLL AXIS AS REQUESTED)
+       SCROLL ENGINE: DEFAULT TOUCHPAD / WHEEL SCROLL AXIS
+       - Scrolling upwards on touchpad / wheel down (e.deltaY > 0) scrolls page DOWN
+       - Top fold is pinned at Y_pin
        ========================================================================== */
-    let targetProgress = 0.03;
-    let currentProgress = 0.03;
+    let targetProgress = 0.0;
+    let currentProgress = 0.0;
     const lerpFactor = 0.12;
 
     let isProgrammaticScroll = false;
@@ -171,7 +222,7 @@ export function UnrollingFolioCanvas() {
       const maxScroll =
         document.documentElement.scrollHeight - window.innerHeight;
       if (maxScroll > 0) {
-        const targetY = ((targetProgress - 0.02) / 0.98) * maxScroll;
+        const targetY = targetProgress * maxScroll;
         window.scrollTo({ top: targetY, behavior: "instant" });
       }
       requestAnimationFrame(() => {
@@ -179,18 +230,18 @@ export function UnrollingFolioCanvas() {
       });
     }
 
-    // 1. Direct Mouse Wheel Driver - INVERTED SCROLL AXIS
+    // 1. Mouse Wheel / Touchpad: DEFAULT PAGE SCROLLING AXIS
     const handleWheel = (e: WheelEvent) => {
       e.preventDefault();
-      // Inverted scroll axis: -e.deltaY
-      const delta = -e.deltaY * 0.00048;
-      targetProgress = Math.min(1.0, Math.max(0.02, targetProgress + delta));
+      // Upward touchpad swipe / mouse wheel roll (e.deltaY > 0) scrolls down the page
+      const delta = e.deltaY * 0.00035;
+      targetProgress = Math.min(1.0, Math.max(0.0, targetProgress + delta));
       syncWindowScrollFromProgress();
     };
 
     window.addEventListener("wheel", handleWheel, { passive: false });
 
-    // 2. Click & Drag on Screen - INVERTED DRAG AXIS
+    // 2. Click & Drag on Screen (Swiping up advances downward)
     let isDragging = false;
     let dragStartY = 0;
     let progressAtDragStart = 0;
@@ -205,12 +256,12 @@ export function UnrollingFolioCanvas() {
 
     const handleMouseMove = (e: MouseEvent) => {
       if (!isDragging) return;
-      // Inverted drag axis: dragging down increases progress (unrolls downward)
-      const deltaY = e.clientY - dragStartY;
-      const progressDelta = deltaY / (window.innerHeight * 0.85);
+      // Dragging upward (e.clientY < dragStartY) pulls next content into view
+      const deltaY = dragStartY - e.clientY;
+      const progressDelta = deltaY / (window.innerHeight * 2.5);
       targetProgress = Math.min(
         1.0,
-        Math.max(0.02, progressAtDragStart + progressDelta)
+        Math.max(0.0, progressAtDragStart + progressDelta)
       );
       syncWindowScrollFromProgress();
     };
@@ -226,7 +277,7 @@ export function UnrollingFolioCanvas() {
     window.addEventListener("mousemove", handleMouseMove);
     window.addEventListener("mouseup", handleMouseUp);
 
-    // 3. Touch Drag (Mobile / Tablet) - INVERTED TOUCH AXIS
+    // 3. Touch Gestures (Mobile / Tablet)
     let touchStartY = 0;
     let touchProgressStart = 0;
 
@@ -241,12 +292,12 @@ export function UnrollingFolioCanvas() {
     const handleTouchMove = (e: TouchEvent) => {
       const touch = e.touches[0];
       if (touch) {
-        // Inverted touch axis: swiping down pulls down / increases progress
-        const deltaY = touch.clientY - touchStartY;
-        const progressDelta = deltaY / (window.innerHeight * 0.85);
+        // Swiping upward (touch.clientY < touchStartY) pulls page down
+        const deltaY = touchStartY - touch.clientY;
+        const progressDelta = deltaY / (window.innerHeight * 2.5);
         targetProgress = Math.min(
           1.0,
-          Math.max(0.02, touchProgressStart + progressDelta)
+          Math.max(0.0, touchProgressStart + progressDelta)
         );
         syncWindowScrollFromProgress();
       }
@@ -255,7 +306,7 @@ export function UnrollingFolioCanvas() {
     window.addEventListener("touchstart", handleTouchStart, { passive: true });
     window.addEventListener("touchmove", handleTouchMove, { passive: false });
 
-    // 4. Native Browser Scrollbar
+    // 4. Native Browser Scrollbar Synchronization
     const handleScroll = () => {
       if (isProgrammaticScroll) return;
       const docEl = document.documentElement;
@@ -266,8 +317,7 @@ export function UnrollingFolioCanvas() {
       const clientHeight = docEl.clientHeight || window.innerHeight;
       const maxScroll = scrollHeight - clientHeight;
       if (maxScroll > 0) {
-        const frac = Math.min(1.0, Math.max(0.0, scrollTop / maxScroll));
-        targetProgress = 0.02 + frac * 0.98;
+        targetProgress = Math.min(1.0, Math.max(0.0, scrollTop / maxScroll));
       }
     };
 
@@ -275,18 +325,18 @@ export function UnrollingFolioCanvas() {
 
     // 5. Keyboard Navigation
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "ArrowUp" || e.key === "PageUp") {
-        targetProgress = Math.min(1.0, targetProgress + 0.06);
-        syncWindowScrollFromProgress();
-      } else if (
+      if (
         e.key === "ArrowDown" ||
         e.key === "PageDown" ||
         e.key === " "
       ) {
-        targetProgress = Math.max(0.02, targetProgress - 0.06);
+        targetProgress = Math.min(1.0, targetProgress + 0.05);
+        syncWindowScrollFromProgress();
+      } else if (e.key === "ArrowUp" || e.key === "PageUp") {
+        targetProgress = Math.max(0.0, targetProgress - 0.05);
         syncWindowScrollFromProgress();
       } else if (e.key === "Home") {
-        targetProgress = 0.02;
+        targetProgress = 0.0;
         syncWindowScrollFromProgress();
       } else if (e.key === "End") {
         targetProgress = 1.0;
@@ -302,8 +352,7 @@ export function UnrollingFolioCanvas() {
       if (!bar) return;
       const rect = bar.getBoundingClientRect();
       const clickX = e.clientX - rect.left;
-      const frac = Math.min(1.0, Math.max(0.0, clickX / rect.width));
-      targetProgress = 0.02 + frac * 0.98;
+      targetProgress = Math.min(1.0, Math.max(0.0, clickX / rect.width));
       syncWindowScrollFromProgress();
     };
 
@@ -333,7 +382,7 @@ export function UnrollingFolioCanvas() {
       // Subtle ambient breathing motion
       const t = clock.getElapsedTime();
       if (scrollMesh) {
-        scrollMesh.rotation.y = Math.sin(t * 0.4) * 0.004;
+        scrollMesh.rotation.y = Math.sin(t * 0.4) * 0.003;
       }
 
       renderer.render(scene, camera);
@@ -343,6 +392,7 @@ export function UnrollingFolioCanvas() {
 
     // Cleanup on unmount
     return () => {
+      isDisposed = true;
       cancelAnimationFrame(animationFrameId);
       window.removeEventListener("resize", updateDimensions);
       window.removeEventListener("wheel", handleWheel);
@@ -371,7 +421,7 @@ export function UnrollingFolioCanvas() {
   return (
     <div
       ref={mountRef}
-      className="relative w-full min-h-[220vh] bg-white cursor-grab active:cursor-grabbing select-none"
+      className="relative w-full min-h-[420vh] bg-white cursor-grab active:cursor-grabbing select-none"
     >
       {/* Fixed Full-Screen WebGL Canvas */}
       <canvas
@@ -381,9 +431,9 @@ export function UnrollingFolioCanvas() {
       />
 
       {/* Native Scroll Spacer Runway */}
-      <div className="absolute inset-0 w-full h-[220vh] pointer-events-none z-20" />
+      <div className="absolute inset-0 w-full h-[420vh] pointer-events-none z-20" />
 
-      {/* Minimal Bottom Scrubber Line with Terracotta Fill */}
+      {/* Minimal Bottom Scrubber Line with Warm Terracotta Fill */}
       <div
         ref={progressBarRef}
         id="folio-progress-bar"
@@ -392,7 +442,7 @@ export function UnrollingFolioCanvas() {
       >
         <div
           ref={progressFillRef}
-          className="h-full w-[3%] bg-[#c85a32] transition-[width] duration-75 ease-linear"
+          className="h-full w-[0%] bg-[#c85a32] transition-[width] duration-75 ease-linear"
         />
       </div>
     </div>
