@@ -1,6 +1,17 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { UnrollingFolioCanvas } from "@/components/scroll-canvas/UnrollingFolioCanvas";
+import { Header } from "@/components/site/header";
+import { Hero } from "@/components/site/hero";
+import { About } from "@/components/site/about";
+import { Projects } from "@/components/site/projects";
+import { Services } from "@/components/site/services";
+import { Benchmarks } from "@/components/site/benchmarks";
+import { Team } from "@/components/site/team";
+import { Quotation } from "@/components/site/quotation";
+import { Footer } from "@/components/site/footer";
+import { Motion } from "@/components/site/motion";
 import { FloatingWhatsApp } from "@/components/site/floating-whatsapp";
+import { PinnedTopRollCanvas } from "@/components/scroll-canvas/PinnedTopRollCanvas";
+import { PaperFolioContainer } from "@/components/scroll-canvas/PaperFolioContainer";
 
 const title = "Asterisk Construction — Building Africa's Future, Today";
 const description =
@@ -23,10 +34,29 @@ export const Route = createFileRoute("/")({
 function Index() {
   return (
     <>
-      <main className="relative w-full min-h-screen bg-white overflow-x-hidden">
-        <UnrollingFolioCanvas />
-      </main>
+      {/* Pinned 3D Archimedean Spiral Roll anchored at the top of the viewport */}
+      <PinnedTopRollCanvas />
+
+      {/* Interactive Header Navigation Bar */}
+      <Header />
+
+      {/* Architectural Parchment Paper Folio with Drafting Frame, Margin Padding & Crumpled Texture */}
+      <PaperFolioContainer>
+        <main>
+          <Hero />
+          <About />
+          <Services />
+          <Projects />
+          <Benchmarks />
+          <Team />
+          <Quotation />
+        </main>
+        <Footer />
+      </PaperFolioContainer>
+
+      {/* Floating WhatsApp Widget & Fluid Scroll Animations */}
       <FloatingWhatsApp />
+      <Motion />
     </>
   );
 }
