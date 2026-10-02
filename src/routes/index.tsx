@@ -1,14 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Header } from "@/components/site/header";
-import { Hero } from "@/components/site/hero";
-import { About } from "@/components/site/about";
-import { Projects } from "@/components/site/projects";
-import { Services } from "@/components/site/services";
-import { Benchmarks } from "@/components/site/benchmarks";
-import { Team } from "@/components/site/team";
-import { Quotation } from "@/components/site/quotation";
-import { Footer } from "@/components/site/footer";
-import { Motion } from "@/components/site/motion";
+import { UnrollingFolioCanvas } from "@/components/scroll-canvas/UnrollingFolioCanvas";
 import { FloatingWhatsApp } from "@/components/site/floating-whatsapp";
 
 const title = "Asterisk Construction — Building Africa's Future, Today";
@@ -32,19 +23,10 @@ export const Route = createFileRoute("/")({
 function Index() {
   return (
     <>
-      <Header />
-      <main>
-        <Hero />
-        <About />
-        <Services />
-        <Projects />
-        <Benchmarks />
-        <Team />
-        <Quotation />
+      <main className="relative w-full min-h-screen bg-white overflow-x-hidden">
+        <UnrollingFolioCanvas />
       </main>
-      <Footer />
       <FloatingWhatsApp />
-      <Motion />
     </>
   );
 }
