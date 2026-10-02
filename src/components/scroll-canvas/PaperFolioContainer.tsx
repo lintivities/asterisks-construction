@@ -10,7 +10,7 @@ export function PaperFolioContainer({ children }: PaperFolioContainerProps) {
   const coordinateMarkers = ["A", "B", "C", "D", "E", "F", "G", "H", "J", "K"];
 
   return (
-    <div className="relative w-full min-h-screen bg-[#edece8] py-4 sm:py-8 px-2 sm:px-4 md:px-8 overflow-x-hidden">
+    <div className="relative w-full min-h-screen bg-[#edece8] pt-0 pb-8 sm:pb-12 px-2 sm:px-4 md:px-8 overflow-x-hidden">
       {/* Central Architectural Parchment Paper Folio with Authentic Deckled Torn Edges */}
       <div
         id="paper-canvas-folio"

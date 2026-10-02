@@ -3,17 +3,16 @@ import * as THREE from "three";
 
 /**
  * 3D Pinned Archimedean Spiral Roll in Three.js
- * - Constrained strictly to the width and position of #paper-canvas-folio (NO viewport overflow)
- * - Thick, multi-turn spiral parchment roll with rich tactile relief
- * - Spins and unrolls dynamically in real-time as the user scrolls
- * - Dual textures: front crumpled texture with directional studio lighting,
- *   interior back crumpled texture with cylinder depth shadowing.
- * - Sized and positioned dynamically with ResizeObserver to match the canvas perfectly.
+ * - Constrained strictly to the width and position of #paper-canvas-folio (ZERO viewport overflow)
+ * - Uses authentic torn paper texture and ragged deckled edge alpha masks from public/images.jpg
+ * - Orthographic camera projection guaranteeing 1:1 pixel width alignment with zero perspective flare
+ * - Thick, multi-turn spiral parchment roll with rich tactile relief and dynamic continuous rotation
+ * - Sized and positioned dynamically with ResizeObserver to match the canvas folio perfectly
  */
 
 const rollVertexShader = /* glsl */ `
   uniform float uProgress;
-  uniform float uVisibleHeight;
+  uniform float uContainerHeight;
   uniform float uBaseRadius;
   uniform float uSpiralFactor;
 
@@ -25,9 +24,9 @@ const rollVertexShader = /* glsl */ `
   void main() {
     vUv = uv;
 
-    // Anchor the top roll so its center sits comfortably inside the top of the viewport
-    float topScreenY = uVisibleHeight * 0.5;
-    float Y_pin = topScreenY - (uBaseRadius * 1.05);
+    // Anchor the top roll so its center sits comfortably inside the top of the container
+    float topScreenY = uContainerHeight * 0.5;
+    float Y_pin = topScreenY - (uBaseRadius * 1.15);
 
     // s represents distance along the coiled sheet
     float s = position.y - Y_pin;
@@ -37,16 +36,16 @@ const rollVertexShader = /* glsl */ `
 
     if (s >= 0.0) {
       // 3D Archimedean spiral coiled cylinder
-      float uncurl = smoothstep(0.88, 1.0, uProgress);
-      float R = mix(uBaseRadius + uSpiralFactor * s, uBaseRadius * 4.5, uncurl);
+      float uncurl = smoothstep(0.85, 1.0, uProgress);
+      float R = mix(uBaseRadius + uSpiralFactor * s, uBaseRadius * 3.8, uncurl);
 
       // Continuous dynamic spin rotation as user scrolls (prominent visual spin)
-      float scrollAngle = uProgress * 28.0;
+      float scrollAngle = uProgress * 26.0;
       float theta = (s / R) + scrollAngle;
 
       float y_curl = Y_pin + sin(theta) * R;
-      // Bring curl forward in Z so it pops dramatically in 3D
-      float z_curl = (1.0 - cos(theta)) * R + 0.35;
+      // 3D curl forward in Z
+      float z_curl = (1.0 - cos(theta)) * R + 10.0;
 
       pos.y = mix(y_curl, position.y, uncurl);
       pos.z = mix(z_curl, 0.0, uncurl);
@@ -56,9 +55,9 @@ const rollVertexShader = /* glsl */ `
       vAlpha = 1.0;
     } else {
       // Flat lip extending slightly downwards into the page with soft gradient blend
-      pos.z = 0.35 * (1.0 + s / 0.5);
+      pos.z = 10.0 * (1.0 + s / 45.0);
       n = vec3(0.0, 0.0, 1.0);
-      vAlpha = smoothstep(0.0, 0.4, 0.4 + s);
+      vAlpha = smoothstep(0.0, 40.0, 45.0 + s);
     }
 
     vPosition = (modelMatrix * vec4(pos, 1.0)).xyz;
@@ -83,32 +82,36 @@ const rollFragmentShader = /* glsl */ `
     if (vAlpha <= 0.02) discard;
 
     vec3 L = normalize(uLightPos - vPosition);
-    vec3 V = normalize(cameraPosition - vPosition);
+    vec3 V = vec3(0.0, 0.0, 1.0);
     vec3 H = normalize(L + V);
 
     float diff = max(dot(vNormal, L), 0.0);
     float wrapDiff = max(0.0, (dot(vNormal, L) + 0.35) / 1.35);
-    float spec = pow(max(dot(vNormal, H), 0.0), 20.0) * 0.06;
+    float spec = pow(max(dot(vNormal, H), 0.0), 20.0) * 0.05;
     vec3 totalLight = uAmbientColor + uLightColor * (diff * 0.45 + wrapDiff * 0.25) + vec3(spec);
 
     if (!gl_FrontFacing) {
-      // Back underside interior of cylinder roll
+      // Back underside interior of cylinder roll with torn edge discarding
       vec2 backUv = vec2(1.0 - vUv.x, vUv.y);
-      vec3 backPaper = texture2D(uBackTexture, backUv).rgb;
-      backPaper = pow(backPaper, vec3(1.25));
-      backPaper *= 0.88;
-      gl_FragColor = vec4(backPaper * totalLight, vAlpha);
+      vec4 backTex = texture2D(uBackTexture, backUv);
+      if (backTex.a < 0.20) discard;
+
+      vec3 backPaper = backTex.rgb * 0.90;
+      gl_FragColor = vec4(backPaper * totalLight, vAlpha * backTex.a);
       return;
     }
 
-    // Front tactile surface of roll
-    vec3 frontPaper = texture2D(uFrontTexture, vUv).rgb;
-    frontPaper = pow(frontPaper, vec3(1.35));
-    gl_FragColor = vec4(frontPaper * totalLight, vAlpha);
+    // Front tactile surface of roll with authentic torn paper texture from images.jpg
+    vec4 frontTex = texture2D(uFrontTexture, vUv);
+    if (frontTex.a < 0.20) discard;
+
+    vec3 frontPaper = frontTex.rgb;
+    gl_FragColor = vec4(frontPaper * totalLight, vAlpha * frontTex.a);
   }
 `;
 
 export function PinnedTopRollCanvas() {
+  const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const shadowRef = useRef<HTMLDivElement>(null);
 
@@ -119,45 +122,48 @@ export function PinnedTopRollCanvas() {
     const renderer = new THREE.WebGLRenderer({
       canvas,
       antialias: true,
-      alpha: true, // Transparent background so page DOM content is visible
+      alpha: true, // Transparent background so paper canvas underneath is visible
       powerPreference: "high-performance",
     });
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.setClearColor(0x000000, 0);
 
     const scene = new THREE.Scene();
 
-    const camera = new THREE.PerspectiveCamera(
-      36,
-      window.innerWidth / window.innerHeight,
+    // Orthographic camera guarantees exact 1:1 pixel width alignment with zero side perspective overflow
+    const camera = new THREE.OrthographicCamera(
+      -500,
+      500,
+      100,
+      -100,
       0.1,
-      100
+      1000
     );
-    camera.position.set(0, 0, 7.0);
+    camera.position.set(0, 0, 500);
     camera.lookAt(0, 0, 0);
 
     // Studio lighting creating 3D roll depth
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.7);
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.72);
     scene.add(ambientLight);
 
-    const keyLight = new THREE.DirectionalLight(0xffffff, 0.65);
-    keyLight.position.set(3.5, 6.0, 5.0);
+    const keyLight = new THREE.DirectionalLight(0xffffff, 0.55);
+    keyLight.position.set(300, 200, 350);
     scene.add(keyLight);
 
     const fillLight = new THREE.DirectionalLight(0xfef3c7, 0.25);
-    fillLight.position.set(-3.5, -2.0, 3.5);
+    fillLight.position.set(-300, -100, 250);
     scene.add(fillLight);
 
+    // Load authentic torn paper textures extracted from public/images.jpg
     const textureLoader = new THREE.TextureLoader();
     const backPaperTexture = textureLoader.load(
-      "/assets/textures/paper-back.jpg"
+      "/assets/textures/roll-torn-paper-back.png"
     );
     backPaperTexture.wrapS = THREE.ClampToEdgeWrapping;
     backPaperTexture.wrapT = THREE.ClampToEdgeWrapping;
 
     const frontPaperTexture = textureLoader.load(
-      "/assets/textures/paper-front.jpg"
+      "/assets/textures/roll-torn-paper.png"
     );
     frontPaperTexture.wrapS = THREE.ClampToEdgeWrapping;
     frontPaperTexture.wrapT = THREE.ClampToEdgeWrapping;
@@ -169,86 +175,85 @@ export function PinnedTopRollCanvas() {
       transparent: true,
       uniforms: {
         uProgress: { value: 0.0 },
-        uVisibleHeight: { value: 1.0 },
-        uBaseRadius: { value: 0.38 },
-        uSpiralFactor: { value: 0.035 },
+        uContainerHeight: { value: 180.0 },
+        uBaseRadius: { value: 42.0 },
+        uSpiralFactor: { value: 0.032 },
         uFrontTexture: { value: frontPaperTexture },
         uBackTexture: { value: backPaperTexture },
-        uLightPos: { value: new THREE.Vector3(3.5, 6.0, 5.0) },
-        uLightColor: { value: new THREE.Vector3(0.5, 0.5, 0.5) },
-        uAmbientColor: { value: new THREE.Vector3(0.68, 0.68, 0.7) },
+        uLightPos: { value: new THREE.Vector3(300, 180, 350) },
+        uLightColor: { value: new THREE.Vector3(0.48, 0.48, 0.48) },
+        uAmbientColor: { value: new THREE.Vector3(0.72, 0.72, 0.72) },
       },
     });
 
     let mesh: THREE.Mesh | null = null;
 
     function updateDimensions() {
-      const w = window.innerWidth;
-      const h = window.innerHeight;
-      camera.aspect = w / h;
-      camera.updateProjectionMatrix();
-      renderer.setSize(w, h);
-      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-
-      const vFovRad = (camera.fov * Math.PI) / 180;
-      const visibleHeight = 2 * Math.tan(vFovRad / 2) * camera.position.z;
-      const visibleWidth = visibleHeight * camera.aspect;
-
-      // Measure the exact position and width of #paper-canvas-folio
       const paperEl = document.getElementById("paper-canvas-folio");
-      let worldWidth = visibleWidth;
-      let worldCenterX = 0;
+      if (!paperEl) return;
 
-      if (paperEl && w > 0) {
-        const rect = paperEl.getBoundingClientRect();
-        // Convert screen pixel width to Three.js world units
-        worldWidth = (rect.width / w) * visibleWidth;
-        // Calculate center X offset in Three.js coordinates
-        const canvasCenterScreenX = rect.left + rect.width * 0.5;
-        worldCenterX = ((canvasCenterScreenX / w) - 0.5) * visibleWidth;
+      const rect = paperEl.getBoundingClientRect();
+      const canvasW = Math.max(300, rect.width);
+      const canvasLeft = rect.left;
+      const rollTop = Math.max(0, rect.top);
+      // Container height accommodates the coil diameter + uncurling lip + shadow
+      const containerH = Math.min(220, Math.max(160, Math.round(window.innerHeight * 0.22)));
 
-        // Position and size the contact shadow element to match the canvas precisely
-        if (shadowRef.current) {
-          shadowRef.current.style.width = `${rect.width}px`;
-          shadowRef.current.style.left = `${rect.left}px`;
-        }
+      // Position the container DOM element EXACTLY at the left & width of #paper-canvas-folio
+      if (containerRef.current) {
+        containerRef.current.style.top = `${rollTop}px`;
+        containerRef.current.style.left = `${canvasLeft}px`;
+        containerRef.current.style.width = `${canvasW}px`;
+        containerRef.current.style.height = `${containerH}px`;
       }
 
-      // Prominent coil radius (~8.5% of visible screen height)
-      const baseRadius = visibleHeight * 0.085;
-      const topScreenY = visibleHeight * 0.5;
-      const Y_pin = topScreenY - (baseRadius * 1.05);
+      // Position the contact shadow element to match the canvas folio precisely
+      if (shadowRef.current) {
+        shadowRef.current.style.top = `${rollTop}px`;
+        shadowRef.current.style.left = `${canvasLeft}px`;
+        shadowRef.current.style.width = `${canvasW}px`;
+      }
 
-      const rollSheetLength = 2.8;
-      const lipLength = 0.5;
+      renderer.setSize(canvasW, containerH);
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+      // Configure orthographic camera frustum to match canvas dimensions in exact pixel units
+      camera.left = -canvasW * 0.5;
+      camera.right = canvasW * 0.5;
+      camera.top = containerH * 0.5;
+      camera.bottom = -containerH * 0.5;
+      camera.updateProjectionMatrix();
+
+      // Proportional coil radius (~4.5% of width, bounded between 28px and 44px)
+      const baseRadius = Math.max(28.0, Math.min(44.0, canvasW * 0.045));
+      const topY = containerH * 0.5;
+      const Y_pin = topY - (baseRadius * 1.15);
+
+      const rollSheetLength = baseRadius * 7.2;
+      const lipLength = 45.0;
       const totalH = rollSheetLength + lipLength;
 
       if (mesh) {
         mesh.geometry.dispose();
       }
 
-      // Geometry width EXACTLY matches the padded paper canvas - zero overflow to the viewport sides
-      const geometry = new THREE.PlaneGeometry(
-        worldWidth,
-        totalH,
-        180,
-        360
-      );
+      // Geometry width is EXACTLY canvasW — 100% matched to #paper-canvas-folio with zero side overlap
+      const geometry = new THREE.PlaneGeometry(canvasW, totalH, 200, 320);
       geometry.translate(0, Y_pin + (rollSheetLength - lipLength) * 0.5, 0);
 
       mesh = new THREE.Mesh(geometry, shaderMaterial);
-      mesh.position.x = worldCenterX;
+      mesh.position.set(0, 0, 0);
       scene.add(mesh);
 
       const uniforms = shaderMaterial.uniforms;
-      if (uniforms["uVisibleHeight"])
-        uniforms["uVisibleHeight"].value = visibleHeight;
+      if (uniforms["uContainerHeight"]) uniforms["uContainerHeight"].value = containerH;
       if (uniforms["uBaseRadius"]) uniforms["uBaseRadius"].value = baseRadius;
+      if (uniforms["uLightPos"]) uniforms["uLightPos"].value.set(canvasW * 0.25, containerH * 0.8, 350.0);
     }
 
     window.addEventListener("resize", updateDimensions);
 
-    // ResizeObserver on the paper canvas element to guarantee 1:1 width sync
+    // ResizeObserver on the paper canvas element to guarantee continuous 1:1 width sync
     let resizeObserver: ResizeObserver | null = null;
     const paperEl = document.getElementById("paper-canvas-folio");
     if (paperEl && typeof ResizeObserver !== "undefined") {
@@ -273,6 +278,15 @@ export function PinnedTopRollCanvas() {
         Math.max(docEl.scrollHeight, body.scrollHeight) - window.innerHeight;
       if (maxScroll > 0) {
         targetProgress = Math.min(1.0, Math.max(0.0, scrollTop / maxScroll));
+      }
+
+      // Update vertical position if paper folio moves relative to top
+      const pEl = document.getElementById("paper-canvas-folio");
+      if (pEl && containerRef.current && shadowRef.current) {
+        const r = pEl.getBoundingClientRect();
+        const rollTop = Math.max(0, r.top);
+        containerRef.current.style.top = `${rollTop}px`;
+        shadowRef.current.style.top = `${rollTop}px`;
       }
     };
 
@@ -316,11 +330,12 @@ export function PinnedTopRollCanvas() {
 
   return (
     <>
-      {/* Fixed Full-Screen WebGL Canvas for Prominent 3D Pinned Roll */}
+      {/* Pinned 3D Roll Canvas strictly constrained to #paper-canvas-folio */}
       <div
-        className="fixed inset-0 w-screen h-screen z-40 pointer-events-none overflow-hidden"
+        ref={containerRef}
+        className="fixed top-0 pointer-events-none z-40 overflow-hidden"
         style={{
-          filter: "drop-shadow(0 22px 26px rgba(0, 0, 0, 0.26))",
+          filter: "drop-shadow(0 20px 24px rgba(0, 0, 0, 0.22))",
         }}
         aria-hidden="true"
       >
@@ -330,7 +345,7 @@ export function PinnedTopRollCanvas() {
       {/* Deep Contact Shadow Exactly Matched to the Paper Canvas Width */}
       <div
         ref={shadowRef}
-        className="fixed top-0 pointer-events-none z-30 transition-opacity duration-150 h-28"
+        className="fixed top-0 pointer-events-none z-30 transition-opacity duration-150 h-24"
         style={{
           background:
             "linear-gradient(to bottom, rgba(17, 24, 39, 0.38) 0%, rgba(17, 24, 39, 0.14) 45%, transparent 100%)",
