@@ -1,6 +1,16 @@
 import React, { useEffect, useRef } from "react";
 import * as THREE from "three";
 
+/**
+ * Highly Prominent 3D Pinned Archimedean Spiral Roll in Three.js
+ * - Positioned visibly at the top of the screen hanging down into the viewport
+ * - Thick, multi-turn spiral parchment roll with rich tactile relief
+ * - Spins and unrolls dynamically in real-time as the user scrolls
+ * - Dual textures: front crumpled texture with directional studio lighting,
+ *   interior back crumpled texture with cylinder depth shadowing.
+ * - Casts a deep realistic drop shadow over the paper sheet below.
+ */
+
 const rollVertexShader = /* glsl */ `
   uniform float uProgress;
   uniform float uVisibleHeight;
@@ -11,40 +21,47 @@ const rollVertexShader = /* glsl */ `
   varying vec3 vPosition;
   varying vec3 vNormal;
   varying float vAlpha;
+  varying float vDepth;
 
   void main() {
     vUv = uv;
 
-    // Pin line anchored at the top edge of visible viewport
-    float Y_pin = uVisibleHeight * 0.5;
+    // Anchor the top roll so its center sits comfortably inside the top of the viewport
+    float topScreenY = uVisibleHeight * 0.5;
+    float Y_pin = topScreenY - (uBaseRadius * 1.05);
 
-    // Position along sheet: sheet extends above Y_pin into the roll
+    // s represents distance along the coiled sheet
     float s = position.y - Y_pin;
 
     vec3 pos = position;
     vec3 n = normal;
 
     if (s >= 0.0) {
-      // 3D Archimedean spiral coiled cylinder pinned at top edge
-      float uncurl = smoothstep(0.92, 1.0, uProgress);
-      float R = mix(uBaseRadius + uSpiralFactor * s, uBaseRadius * 4.0, uncurl);
+      // 3D Archimedean spiral coiled cylinder
+      float uncurl = smoothstep(0.88, 1.0, uProgress);
+      float R = mix(uBaseRadius + uSpiralFactor * s, uBaseRadius * 4.5, uncurl);
 
-      // Continuous rotation as user scrolls
-      float scrollAngle = uProgress * 14.0;
+      // Continuous dynamic spin rotation as user scrolls (prominent visual spin)
+      float scrollAngle = uProgress * 28.0;
       float theta = (s / R) + scrollAngle;
 
       float y_curl = Y_pin + sin(theta) * R;
-      float z_curl = (1.0 - cos(theta)) * R + 0.18;
+      // Bring curl forward in Z so it pops dramatically in 3D
+      float z_curl = (1.0 - cos(theta)) * R + 0.35;
 
       pos.y = mix(y_curl, position.y, uncurl);
       pos.z = mix(z_curl, 0.0, uncurl);
+
+      // Normal rotated around X axis following cylinder curvature
       n = vec3(0.0, -sin(theta), cos(theta));
       vAlpha = 1.0;
+      vDepth = pos.z;
     } else {
-      // Below Y_pin: flat lip with soft fade-out
-      pos.z = 0.18 * (1.0 + s / 0.45);
+      // Flat lip extending slightly downwards into the page with soft gradient blend
+      pos.z = 0.35 * (1.0 + s / 0.5);
       n = vec3(0.0, 0.0, 1.0);
-      vAlpha = smoothstep(0.0, 0.35, 0.35 + s);
+      vAlpha = smoothstep(0.0, 0.4, 0.4 + s);
+      vDepth = pos.z;
     }
 
     vPosition = (modelMatrix * vec4(pos, 1.0)).xyz;
@@ -64,37 +81,41 @@ const rollFragmentShader = /* glsl */ `
   varying vec3 vPosition;
   varying vec3 vNormal;
   varying float vAlpha;
+  varying float vDepth;
 
   void main() {
-    if (vAlpha <= 0.01) discard;
+    if (vAlpha <= 0.02) discard;
 
     vec3 L = normalize(uLightPos - vPosition);
     vec3 V = normalize(cameraPosition - vPosition);
     vec3 H = normalize(L + V);
 
     float diff = max(dot(vNormal, L), 0.0);
-    float wrapDiff = max(0.0, (dot(vNormal, L) + 0.3) / 1.3);
-    float spec = pow(max(dot(vNormal, H), 0.0), 24.0) * 0.04;
-    vec3 totalLight = uAmbientColor + uLightColor * (diff * 0.4 + wrapDiff * 0.2) + vec3(spec);
+    float wrapDiff = max(0.0, (dot(vNormal, L) + 0.35) / 1.35);
+    float spec = pow(max(dot(vNormal, H), 0.0), 20.0) * 0.06;
+    vec3 totalLight = uAmbientColor + uLightColor * (diff * 0.45 + wrapDiff * 0.25) + vec3(spec);
 
     if (!gl_FrontFacing) {
-      // Back underside of cylinder roll
+      // Back underside interior of cylinder roll
       vec2 backUv = vec2(1.0 - vUv.x, vUv.y);
       vec3 backPaper = texture2D(uBackTexture, backUv).rgb;
-      backPaper = pow(backPaper, vec3(1.2));
+      backPaper = pow(backPaper, vec3(1.25));
+      // Subtle interior shadow inside cylinder roll
+      backPaper *= 0.88;
       gl_FragColor = vec4(backPaper * totalLight, vAlpha);
       return;
     }
 
-    // Front surface of roll
+    // Front tactile surface of roll
     vec3 frontPaper = texture2D(uFrontTexture, vUv).rgb;
-    frontPaper = pow(frontPaper, vec3(1.25));
+    frontPaper = pow(frontPaper, vec3(1.35));
     gl_FragColor = vec4(frontPaper * totalLight, vAlpha);
   }
 `;
 
 export function PinnedTopRollCanvas() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const shadowRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -103,17 +124,17 @@ export function PinnedTopRollCanvas() {
     const renderer = new THREE.WebGLRenderer({
       canvas,
       antialias: true,
-      alpha: true, // Transparent background so page DOM is fully visible underneath
+      alpha: true, // Transparent background so page DOM content is visible
       powerPreference: "high-performance",
     });
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.setSize(window.innerWidth, window.innerHeight);
-    renderer.setClearColor(0x000000, 0); // Transparent
+    renderer.setClearColor(0x000000, 0);
 
     const scene = new THREE.Scene();
 
     const camera = new THREE.PerspectiveCamera(
-      38,
+      36,
       window.innerWidth / window.innerHeight,
       0.1,
       100
@@ -121,12 +142,17 @@ export function PinnedTopRollCanvas() {
     camera.position.set(0, 0, 7.0);
     camera.lookAt(0, 0, 0);
 
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.75);
+    // Dynamic studio key light creating deep 3D roll curvature
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.7);
     scene.add(ambientLight);
 
-    const keyLight = new THREE.DirectionalLight(0xffffff, 0.55);
-    keyLight.position.set(3.0, 5.0, 4.5);
+    const keyLight = new THREE.DirectionalLight(0xffffff, 0.65);
+    keyLight.position.set(3.5, 6.0, 5.0);
     scene.add(keyLight);
+
+    const fillLight = new THREE.DirectionalLight(0xfef3c7, 0.25);
+    fillLight.position.set(-3.5, -2.0, 3.5);
+    scene.add(fillLight);
 
     const textureLoader = new THREE.TextureLoader();
     const backPaperTexture = textureLoader.load(
@@ -149,13 +175,13 @@ export function PinnedTopRollCanvas() {
       uniforms: {
         uProgress: { value: 0.0 },
         uVisibleHeight: { value: 1.0 },
-        uBaseRadius: { value: 0.22 },
-        uSpiralFactor: { value: 0.024 },
+        uBaseRadius: { value: 0.38 },
+        uSpiralFactor: { value: 0.035 },
         uFrontTexture: { value: frontPaperTexture },
         uBackTexture: { value: backPaperTexture },
-        uLightPos: { value: new THREE.Vector3(3.0, 5.0, 4.5) },
-        uLightColor: { value: new THREE.Vector3(0.45, 0.45, 0.45) },
-        uAmbientColor: { value: new THREE.Vector3(0.7, 0.7, 0.7) },
+        uLightPos: { value: new THREE.Vector3(3.5, 6.0, 5.0) },
+        uLightColor: { value: new THREE.Vector3(0.5, 0.5, 0.5) },
+        uAmbientColor: { value: new THREE.Vector3(0.68, 0.68, 0.7) },
       },
     });
 
@@ -173,24 +199,29 @@ export function PinnedTopRollCanvas() {
       const visibleHeight = 2 * Math.tan(vFovRad / 2) * camera.position.z;
       const visibleWidth = visibleHeight * camera.aspect;
 
-      const Y_pin = visibleHeight * 0.5;
-      const rollHeight = 1.6; // Height segment for the coiled cylinder roll
-      const lipHeight = 0.45;
-      const totalMeshH = rollHeight + lipHeight;
+      // Prominent coil radius (~8.5% of visible screen height)
+      const baseRadius = visibleHeight * 0.085;
+      const topScreenY = visibleHeight * 0.5;
+      const Y_pin = topScreenY - (baseRadius * 1.05);
+
+      // Substantial sheet length rolled into the cylinder (multi-turn spiral)
+      const rollSheetLength = 2.8;
+      const lipLength = 0.5;
+      const totalH = rollSheetLength + lipLength;
 
       if (mesh) {
         mesh.geometry.dispose();
       }
 
-      // Plane positioned around Y_pin
+      // High-density subdivision for super smooth 3D curved cylinder
       const geometry = new THREE.PlaneGeometry(
-        visibleWidth * 1.02,
-        totalMeshH,
-        140,
-        280
+        visibleWidth * 1.06,
+        totalH,
+        180,
+        360
       );
-      // Translate geometry so Y_pin is positioned accurately
-      geometry.translate(0, Y_pin + (rollHeight - lipHeight) * 0.5, 0);
+      // Position plane centered on Y_pin
+      geometry.translate(0, Y_pin + (rollSheetLength - lipLength) * 0.5, 0);
 
       mesh = new THREE.Mesh(geometry, shaderMaterial);
       scene.add(mesh);
@@ -198,14 +229,13 @@ export function PinnedTopRollCanvas() {
       const uniforms = shaderMaterial.uniforms;
       if (uniforms["uVisibleHeight"])
         uniforms["uVisibleHeight"].value = visibleHeight;
-      if (uniforms["uBaseRadius"])
-        uniforms["uBaseRadius"].value = visibleHeight * 0.05;
+      if (uniforms["uBaseRadius"]) uniforms["uBaseRadius"].value = baseRadius;
     }
 
     window.addEventListener("resize", updateDimensions);
     updateDimensions();
 
-    // Scroll progress driver (Default page scrolling axis)
+    // Scroll progress driver (Tracks standard window scroll)
     let targetProgress = 0.0;
     let currentProgress = 0.0;
 
@@ -227,10 +257,18 @@ export function PinnedTopRollCanvas() {
     let animationFrameId: number;
     const animate = () => {
       animationFrameId = requestAnimationFrame(animate);
-      currentProgress += (targetProgress - currentProgress) * 0.12;
+
+      // Smooth momentum lerping
+      currentProgress += (targetProgress - currentProgress) * 0.14;
 
       if (shaderMaterial.uniforms["uProgress"]) {
         shaderMaterial.uniforms["uProgress"].value = currentProgress;
+      }
+
+      // Update drop shadow opacity based on uncurl state
+      if (shadowRef.current) {
+        const shadowOpacity = Math.max(0, 1.0 - currentProgress * 0.95);
+        shadowRef.current.style.opacity = `${shadowOpacity.toFixed(2)}`;
       }
 
       renderer.render(scene, camera);
@@ -251,14 +289,28 @@ export function PinnedTopRollCanvas() {
   }, []);
 
   return (
-    <div
-      className="fixed inset-0 w-screen h-screen z-40 pointer-events-none overflow-hidden"
-      aria-hidden="true"
-    >
-      <canvas
-        ref={canvasRef}
-        className="w-full h-full block"
+    <>
+      {/* Fixed Full-Screen WebGL Canvas for Prominent 3D Pinned Roll */}
+      <div
+        className="fixed inset-0 w-screen h-screen z-40 pointer-events-none overflow-hidden"
+        style={{
+          filter: "drop-shadow(0 24px 28px rgba(0, 0, 0, 0.28))",
+        }}
+        aria-hidden="true"
+      >
+        <canvas ref={canvasRef} className="w-full h-full block" />
+      </div>
+
+      {/* Deep Contact Shadow Beneath Pinned Roll Cast Downward onto Content */}
+      <div
+        ref={shadowRef}
+        className="fixed top-0 left-0 w-full h-28 pointer-events-none z-30 transition-opacity duration-150"
+        style={{
+          background:
+            "linear-gradient(to bottom, rgba(17, 24, 39, 0.42) 0%, rgba(17, 24, 39, 0.16) 45%, transparent 100%)",
+        }}
+        aria-hidden="true"
       />
-    </div>
+    </>
   );
 }

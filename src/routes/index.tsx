@@ -1,5 +1,4 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Header } from "@/components/site/header";
 import { Hero } from "@/components/site/hero";
 import { About } from "@/components/site/about";
 import { Projects } from "@/components/site/projects";
@@ -34,13 +33,10 @@ export const Route = createFileRoute("/")({
 function Index() {
   return (
     <>
-      {/* Pinned 3D Archimedean Spiral Roll anchored at the top of the viewport */}
+      {/* Prominent 3D Archimedean Spiral Roll anchored at the top of the viewport */}
       <PinnedTopRollCanvas />
 
-      {/* Interactive Header Navigation Bar */}
-      <Header />
-
-      {/* Architectural Parchment Paper Folio with Drafting Frame, Margin Padding & Crumpled Texture */}
+      {/* Architectural Parchment Paper Folio with Integrated Ledger, Drafting Frame, & Content */}
       <PaperFolioContainer>
         <main>
           <Hero />
@@ -54,7 +50,7 @@ function Index() {
         <Footer />
       </PaperFolioContainer>
 
-      {/* Floating WhatsApp Widget & Fluid Scroll Animations */}
+      {/* Floating WhatsApp CTA Widget & Fluid Scroll Animations */}
       <FloatingWhatsApp />
       <Motion />
     </>
