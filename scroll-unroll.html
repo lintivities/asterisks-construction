@@ -1,0 +1,1273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>3D Vertical Scroll Unrolling Page | Three.js</title>
+  
+  <!-- Modern Editorial & Architectural Typography -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800;900&family=Playfair+Display:ital,wght@0,600;1,400&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
+
+  <style>
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    /* Pristine Plain White Layout */
+    html {
+      width: 100%;
+      min-height: 100%;
+      background-color: #ffffff !important;
+      overflow-y: scroll; /* Native vertical scrollbar */
+      overflow-x: hidden;
+      scroll-behavior: auto;
+    }
+
+    body {
+      width: 100%;
+      min-height: 220vh; /* Smooth, natural scroll runway */
+      background-color: #ffffff !important;
+      color: #111827;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      overflow-x: hidden;
+      cursor: grab;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    body:active {
+      cursor: grabbing;
+    }
+
+    /* Fixed WebGL Canvas Surface */
+    #webgl-canvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      z-index: 1;
+      display: block;
+      background-color: #ffffff;
+    }
+
+    /* Native Scroll Spacer */
+    .scroll-spacer {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 220vh;
+      pointer-events: none;
+      z-index: 2;
+    }
+
+    /* Gallery Minimalist UI Overlay */
+    .ui-layer {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 10;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 36px 48px;
+    }
+
+    .header-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 20px;
+    }
+
+    .brand-eyebrow {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.72rem;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: #6b7280;
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+
+    .title-block h1 {
+      font-family: 'Cinzel', serif;
+      font-size: 1.85rem;
+      font-weight: 800;
+      letter-spacing: 1.5px;
+      color: #111827;
+      text-transform: uppercase;
+    }
+
+    .title-block p {
+      font-size: 0.88rem;
+      color: #4b5563;
+      margin-top: 4px;
+      letter-spacing: 0.2px;
+      font-weight: 400;
+    }
+
+    /* Crisp Monochrome Telemetry Pill */
+    .scroll-telemetry {
+      background: #ffffff;
+      border: 1px solid #e5e7eb;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+      padding: 12px 24px;
+      border-radius: 12px;
+      text-align: right;
+      pointer-events: auto;
+    }
+
+    .telemetry-val {
+      font-family: 'Space Mono', monospace;
+      font-size: 1.45rem;
+      font-weight: 700;
+      color: #111827;
+    }
+
+    .telemetry-label {
+      font-size: 0.65rem;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: #9ca3af;
+      font-weight: 600;
+    }
+
+    /* Footer Navigation & Interactive Scrubber */
+    .footer-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      gap: 24px;
+    }
+
+    .scroll-hint {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      color: #111827;
+      font-family: 'Space Mono', monospace;
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      background: #ffffff;
+      padding: 10px 22px;
+      border-radius: 30px;
+      border: 1px solid #e5e7eb;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+      pointer-events: auto;
+    }
+
+    .mouse-icon {
+      width: 18px;
+      height: 28px;
+      border: 2px solid #111827;
+      border-radius: 9px;
+      position: relative;
+    }
+
+    .mouse-icon::after {
+      content: '';
+      position: absolute;
+      top: 5px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 2px;
+      height: 5px;
+      background-color: #111827;
+      border-radius: 2px;
+      animation: wheelRoll 1.4s infinite ease-in-out;
+    }
+
+    @keyframes wheelRoll {
+      0% { transform: translate(-50%, 0); opacity: 1; }
+      100% { transform: translate(-50%, 9px); opacity: 0; }
+    }
+
+    /* Interactive Draggable Scrubber */
+    .progress-container {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      pointer-events: auto;
+      background: #ffffff;
+      padding: 10px 20px;
+      border-radius: 30px;
+      border: 1px solid #e5e7eb;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+    }
+
+    .progress-caption {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: #6b7280;
+    }
+
+    .progress-track {
+      width: 200px;
+      height: 6px;
+      background: #e5e7eb;
+      border-radius: 4px;
+      overflow: hidden;
+      position: relative;
+      cursor: pointer;
+    }
+
+    .progress-fill {
+      position: absolute;
+      top: 0;
+      left: 0;
+      height: 100%;
+      width: 4%;
+      background: #111827;
+      border-radius: 4px;
+      transition: width 0.04s linear;
+    }
+
+    /* Fallback indicator */
+    #fallback-msg {
+      display: none;
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      padding: 24px 36px;
+      background: #ffffff;
+      border: 1px solid #e5e7eb;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+      border-radius: 12px;
+      text-align: center;
+      font-family: sans-serif;
+      z-index: 100;
+    }
+
+    @media (max-width: 768px) {
+      .ui-layer {
+        padding: 20px;
+      }
+      .title-block h1 {
+        font-size: 1.25rem;
+      }
+      .scroll-telemetry {
+        display: none;
+      }
+      .progress-track {
+        width: 120px;
+      }
+    }
+  </style>
+
+  <!-- Three.js UMD bundle directly (works across local file:/// and dev server) -->
+  <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
+</head>
+<body>
+  <!-- WebGL Render Surface -->
+  <canvas id="webgl-canvas"></canvas>
+
+  <!-- Native Scroll Runway -->
+  <div class="scroll-spacer"></div>
+
+  <!-- Minimal Gallery UI -->
+  <div class="ui-layer">
+    <div class="header-bar">
+      <div class="title-block">
+        <div class="brand-eyebrow">Asterisks Guild · 3D Physics Experience</div>
+        <h1>THE UNROLLING MANUSCRIPT</h1>
+        <p>Architectural folio unrolling with tactile paper relief & precision line-work</p>
+      </div>
+
+      <div class="scroll-telemetry">
+        <div class="telemetry-val" id="telemetry-progress">0.0%</div>
+        <div class="telemetry-label">Unroll Progress</div>
+      </div>
+    </div>
+
+    <div class="footer-bar">
+      <div class="scroll-hint">
+        <div class="mouse-icon"></div>
+        <span>Scroll or Drag to Unroll</span>
+      </div>
+
+      <div class="progress-container">
+        <span class="progress-caption">Progress</span>
+        <div class="progress-track" id="progress-track">
+          <div class="progress-fill" id="telemetry-bar"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="fallback-msg">
+    <h3>WebGL Support Required</h3>
+    <p>Please enable hardware acceleration in your browser to view the 3D scroll unrolling.</p>
+  </div>
+
+  <script>
+    (function () {
+      'use strict';
+
+      if (typeof THREE === 'undefined') {
+        document.getElementById('fallback-msg').style.display = 'block';
+        return;
+      }
+
+      /* ==========================================================================
+         1. PROCEDURAL TEXTURES (PLAIN CRISP WHITE PAPER AESTHETIC)
+         ========================================================================== */
+
+      /**
+       * Generates a 1024x1024 procedural normal map with angular crease lines
+       * and subtle micro-cavities (Crumpled/folded tactile paper relief).
+       */
+      function createCreasedPaperNormalTexture() {
+        const size = 1024;
+        const canvas = document.createElement('canvas');
+        canvas.width = size;
+        canvas.height = size;
+        const ctx = canvas.getContext('2d');
+
+        const imgData = ctx.createImageData(size, size);
+        const data = imgData.data;
+
+        // Voronoi seed points on a jittered grid
+        const numCells = 16;
+        const cellSize = size / numCells;
+        const points = [];
+
+        for (let y = 0; y < numCells; y++) {
+          for (let x = 0; x < numCells; x++) {
+            points.push({
+              x: (x + 0.15 + Math.random() * 0.7) * cellSize,
+              y: (y + 0.15 + Math.random() * 0.7) * cellSize
+            });
+          }
+        }
+
+        const heightMap = new Float32Array(size * size);
+
+        for (let y = 0; y < size; y++) {
+          for (let x = 0; x < size; x++) {
+            const cellX = Math.floor(x / cellSize);
+            const cellY = Math.floor(y / cellSize);
+
+            let d1 = 999999;
+            let d2 = 999999;
+
+            for (let dy = -1; dy <= 1; dy++) {
+              for (let dx = -1; dx <= 1; dx++) {
+                const nx = cellX + dx;
+                const ny = cellY + dy;
+                if (nx >= 0 && nx < numCells && ny >= 0 && ny < numCells) {
+                  const pt = points[ny * numCells + nx];
+                  const distSq = (pt.x - x) * (pt.x - x) + (pt.y - y) * (pt.y - y);
+                  if (distSq < d1) {
+                    d2 = d1;
+                    d1 = distSq;
+                  } else if (distSq < d2) {
+                    d2 = distSq;
+                  }
+                }
+              }
+            }
+
+            const dist1 = Math.sqrt(d1);
+            const dist2 = Math.sqrt(d2);
+
+            // Crisp angular crease along Voronoi cellular edges
+            const ridge = Math.max(0, 1.0 - (dist2 - dist1) / 18.0);
+            const fineGrain = (Math.sin(x * 0.06 + y * 0.07) * Math.cos(x * 0.07 - y * 0.05)) * 0.06;
+
+            heightMap[y * size + x] = ridge * 0.85 + fineGrain;
+          }
+        }
+
+        // Tangent-space normals via Sobel filter
+        const normalScale = 3.2;
+        for (let y = 0; y < size; y++) {
+          for (let x = 0; x < size; x++) {
+            const x0 = x > 0 ? x - 1 : size - 1;
+            const x1 = x < size - 1 ? x + 1 : 0;
+            const y0 = y > 0 ? y - 1 : size - 1;
+            const y1 = y < size - 1 ? y + 1 : 0;
+
+            const dX = (heightMap[y * size + x1] - heightMap[y * size + x0]) * normalScale;
+            const dY = (heightMap[y1 * size + x] - heightMap[y0 * size + x]) * normalScale;
+
+            const len = Math.sqrt(dX * dX + dY * dY + 1.0);
+            const nx = (-dX / len) * 0.5 + 0.5;
+            const ny = (-dY / len) * 0.5 + 0.5;
+            const nz = (1.0 / len) * 0.5 + 0.5;
+
+            const idx = (y * size + x) * 4;
+            data[idx] = Math.floor(nx * 255);
+            data[idx + 1] = Math.floor(ny * 255);
+            data[idx + 2] = Math.floor(nz * 255);
+            data[idx + 3] = 255;
+          }
+        }
+
+        ctx.putImageData(imgData, 0, 0);
+
+        const texture = new THREE.CanvasTexture(canvas);
+        texture.wrapS = THREE.RepeatWrapping;
+        texture.wrapT = THREE.RepeatWrapping;
+        texture.needsUpdate = true;
+        return texture;
+      }
+
+      /**
+       * Generates pure plain white architectural cotton rag paper diffuse texture.
+       * (No yellowish parchment stains, no brown wash).
+       */
+      function createWhitePaperDiffuseTexture() {
+        const size = 1024;
+        const canvas = document.createElement('canvas');
+        canvas.width = size;
+        canvas.height = size;
+        const ctx = canvas.getContext('2d');
+
+        // Pure pristine white base
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, size, size);
+
+        // Very subtle micro-cellulose fiber texture
+        const imgData = ctx.getImageData(0, 0, size, size);
+        const data = imgData.data;
+        for (let i = 0; i < data.length; i += 4) {
+          // Extremely subtle natural variance (-3 to +3 out of 255)
+          const grain = (Math.random() - 0.5) * 5;
+          const val = Math.min(255, Math.max(250, 255 + grain));
+          data[i] = val;
+          data[i + 1] = val;
+          data[i + 2] = val;
+        }
+        ctx.putImageData(imgData, 0, 0);
+
+        const texture = new THREE.CanvasTexture(canvas);
+        texture.wrapS = THREE.RepeatWrapping;
+        texture.wrapT = THREE.RepeatWrapping;
+        texture.needsUpdate = true;
+        return texture;
+      }
+
+      /**
+       * High-Resolution 1400x2800 Off-screen Canvas:
+       * Pure Plain White architectural drawings, blueprint lines, elevation studies,
+       * and exhibition typography in crisp obsidian black & architectural slate.
+       */
+      function createOffscreenDocumentCanvas() {
+        const width = 1400;
+        const height = 2800; // 1:2 ratio matching paper geometry
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+
+        // Pure white background
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, width, height);
+
+        // 1. Precision Technical Drafting Borders
+        ctx.strokeStyle = '#111827';
+        ctx.lineWidth = 4;
+        ctx.strokeRect(50, 50, width - 100, height - 100);
+
+        ctx.strokeStyle = '#e5e7eb';
+        ctx.lineWidth = 1;
+        ctx.strokeRect(62, 62, width - 124, height - 124);
+
+        // Corner registration crosshairs & dimensional ticks
+        function drawCrosshair(x, y) {
+          ctx.strokeStyle = '#111827';
+          ctx.lineWidth = 1.5;
+          ctx.beginPath();
+          ctx.moveTo(x - 12, y); ctx.lineTo(x + 12, y);
+          ctx.moveTo(x, y - 12); ctx.lineTo(x, y + 12);
+          ctx.stroke();
+          ctx.beginPath();
+          ctx.arc(x, y, 5, 0, Math.PI * 2);
+          ctx.stroke();
+        }
+
+        drawCrosshair(50, 50);
+        drawCrosshair(width - 50, 50);
+        drawCrosshair(50, height - 50);
+        drawCrosshair(width - 50, height - 50);
+
+        // Edge coordinate ticks along borders
+        ctx.fillStyle = '#6b7280';
+        ctx.font = '600 13px "Space Mono", monospace';
+        const cols = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'];
+        for (let i = 0; i < cols.length; i++) {
+          const x = 120 + i * ((width - 240) / (cols.length - 1));
+          ctx.fillText(cols[i], x - 4, 40);
+          ctx.fillText(cols[i], x - 4, height - 32);
+          ctx.strokeStyle = '#9ca3af';
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.moveTo(x, 46); ctx.lineTo(x, 50);
+          ctx.moveTo(x, height - 50); ctx.lineTo(x, height - 46);
+          ctx.stroke();
+        }
+
+        // 2. Header Block & Folio Identification
+        ctx.fillStyle = '#111827';
+        ctx.font = '700 14px "Space Mono", monospace';
+        ctx.letterSpacing = '5px';
+        ctx.textAlign = 'center';
+        ctx.fillText('ASTERISKS ARCHITECTURAL GUILD · FOLIO SERIES 01', width * 0.5, 130);
+
+        ctx.font = '800 48px "Cinzel", serif';
+        ctx.letterSpacing = '3px';
+        ctx.fillText('EXHIBITION PAVILION & ARCHIVE', width * 0.5, 195);
+
+        ctx.font = 'italic 18px "Playfair Display", serif';
+        ctx.fillStyle = '#4b5563';
+        ctx.fillText('Structural Cantilevers, Facade Kinetics & Tectonic Assemblies', width * 0.5, 235);
+
+        // Subtle divider line
+        ctx.strokeStyle = '#111827';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.moveTo(180, 260);
+        ctx.lineTo(width - 180, 260);
+        ctx.stroke();
+
+        // 3. Architectural Elevation Drawing (Section 1)
+        const elevY = 320;
+        ctx.strokeStyle = '#111827';
+        ctx.fillStyle = '#111827';
+        ctx.font = '700 15px "Space Mono", monospace';
+        ctx.textAlign = 'left';
+        ctx.fillText('FIGURE 1.0 : NORTH ELEVATION & DIHEDRAL ROOF TRUSS', 110, elevY);
+
+        // Ground datum line
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.moveTo(110, elevY + 360);
+        ctx.lineTo(width - 110, elevY + 360);
+        ctx.stroke();
+
+        // Hatch ground lines
+        ctx.lineWidth = 1;
+        ctx.strokeStyle = '#9ca3af';
+        for (let gx = 110; gx < width - 110; gx += 16) {
+          ctx.beginPath();
+          ctx.moveTo(gx, elevY + 360);
+          ctx.lineTo(gx - 12, elevY + 376);
+          ctx.stroke();
+        }
+
+        // Pavilion structure
+        ctx.strokeStyle = '#111827';
+        ctx.lineWidth = 2.5;
+
+        // Slanted aerodynamic roof
+        ctx.beginPath();
+        ctx.moveTo(160, elevY + 80);
+        ctx.lineTo(680, elevY + 40);
+        ctx.lineTo(1220, elevY + 95);
+        ctx.lineTo(1220, elevY + 115);
+        ctx.lineTo(680, elevY + 60);
+        ctx.lineTo(160, elevY + 100);
+        ctx.closePath();
+        ctx.fillStyle = '#f8fafc';
+        ctx.fill();
+        ctx.stroke();
+
+        // Steel structural columns
+        const colX = [220, 380, 540, 700, 860, 1020, 1160];
+        colX.forEach(x => {
+          ctx.fillStyle = '#111827';
+          ctx.fillRect(x - 5, elevY + 60, 10, 300);
+        });
+
+        // Curtain wall mullion grid
+        ctx.strokeStyle = '#cbd5e1';
+        ctx.lineWidth = 1;
+        for (let my = elevY + 100; my < elevY + 360; my += 32) {
+          ctx.beginPath();
+          ctx.moveTo(170, my);
+          ctx.lineTo(1210, my);
+          ctx.stroke();
+        }
+        for (let mx = 170; mx < 1210; mx += 36) {
+          ctx.beginPath();
+          ctx.moveTo(mx, elevY + 100);
+          ctx.lineTo(mx, elevY + 360);
+          ctx.stroke();
+        }
+
+        // Dimension lines with arrows
+        function drawDimensionLine(x1, y1, x2, y2, label) {
+          ctx.save();
+          ctx.strokeStyle = '#4b5563';
+          ctx.fillStyle = '#4b5563';
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.moveTo(x1, y1); ctx.lineTo(x2, y2);
+          ctx.stroke();
+          // Dimension ticks
+          ctx.beginPath();
+          ctx.moveTo(x1 - 4, y1 - 4); ctx.lineTo(x1 + 4, y1 + 4);
+          ctx.moveTo(x2 - 4, y2 - 4); ctx.lineTo(x2 + 4, y2 + 4);
+          ctx.stroke();
+          // Text
+          ctx.font = '600 12px "Space Mono", monospace';
+          ctx.textAlign = 'center';
+          ctx.fillText(label, (x1 + x2) * 0.5, ((y1 + y2) * 0.5) - 6);
+          ctx.restore();
+        }
+
+        drawDimensionLine(160, elevY + 25, 1220, elevY + 25, '36,400 MM OVERALL SPAN');
+        drawDimensionLine(1240, elevY + 40, 1240, elevY + 360, '11,200 MM');
+
+        // 4. Section 2: Detailed Floor Plan & Tectonic Schematics
+        const planY = 760;
+        ctx.fillStyle = '#111827';
+        ctx.font = '700 15px "Space Mono", monospace';
+        ctx.textAlign = 'left';
+        ctx.fillText('FIGURE 2.0 : GROUND SANCTUARY SCHEMATIC & KINETIC BAFFLES', 110, planY);
+
+        // Drafting grid background for plan
+        ctx.strokeStyle = '#f1f5f9';
+        ctx.lineWidth = 1;
+        for (let py = planY + 30; py < planY + 440; py += 24) {
+          ctx.beginPath();
+          ctx.moveTo(110, py); ctx.lineTo(width - 110, py);
+          ctx.stroke();
+        }
+        for (let px = 110; px < width - 110; px += 24) {
+          ctx.beginPath();
+          ctx.moveTo(px, planY + 30); ctx.lineTo(px, planY + 440);
+          ctx.stroke();
+        }
+
+        // Central atrium geometric outline
+        ctx.strokeStyle = '#111827';
+        ctx.lineWidth = 2.5;
+        ctx.strokeRect(240, planY + 60, width - 480, 320);
+
+        ctx.strokeStyle = '#475569';
+        ctx.lineWidth = 1.5;
+        ctx.strokeRect(300, planY + 100, width - 600, 240);
+
+        // Circular rotunda gallery in center
+        ctx.beginPath();
+        ctx.arc(width * 0.5, planY + 220, 90, 0, Math.PI * 2);
+        ctx.stroke();
+
+        ctx.setLineDash([4, 4]);
+        ctx.beginPath();
+        ctx.arc(width * 0.5, planY + 220, 120, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        // Internal room labels
+        ctx.fillStyle = '#111827';
+        ctx.font = '700 13px "Space Mono", monospace';
+        ctx.textAlign = 'center';
+        ctx.fillText('CENTRAL GALLERY ROTUNDA [R-01]', width * 0.5, planY + 215);
+        ctx.font = '400 11px "Space Mono", monospace';
+        ctx.fillStyle = '#6b7280';
+        ctx.fillText('POURED ARCHITECTURAL TERRAZZO', width * 0.5, planY + 235);
+
+        ctx.fillText('WEST WING · CURATORIAL OFFICE', 340, planY + 220);
+        ctx.fillText('EAST WING · PERMANENT ARCHIVE', width - 340, planY + 220);
+
+        // 5. Section 3: Technical Specifications & Editorial Content
+        const textY = 1270;
+        ctx.fillStyle = '#111827';
+        ctx.font = '800 24px "Cinzel", serif';
+        ctx.textAlign = 'left';
+        ctx.fillText('I. STRUCTURAL PARADIGM & SYSTEM ARCHITECTURE', 110, textY);
+
+        ctx.font = '400 16px "Plus Jakarta Sans", sans-serif';
+        ctx.fillStyle = '#374151';
+        ctx.lineWidth = 1;
+
+        const p1 = "The structural morphology of the Asterisks Archive emerges from a rigorous dialogue between weightless cantilevered planes and monolith cast-in-place concrete piers. By post-tensioning the lateral roof diagonals through high-strength tensile tendons, the primary exhibition floor achieves complete unencumbered spatial freedom across thirty-six linear meters.";
+        const p2 = "Acoustical isolation is established via micro-perforated acoustic cedar baffles suspended beneath the glulam truss purlins. Natural daylight penetrates through north-facing clerestory light-wells, diffusing even ambient illumination across the tactile exhibition paper displays without UV degradation.";
+
+        function wrapText(text, x, y, maxWidth, lineHeight) {
+          const words = text.split(' ');
+          let line = '';
+          for (let n = 0; n < words.length; n++) {
+            const testLine = line + words[n] + ' ';
+            const metrics = ctx.measureText(testLine);
+            if (metrics.width > maxWidth && n > 0) {
+              ctx.fillText(line, x, y);
+              line = words[n] + ' ';
+              y += lineHeight;
+            } else {
+              line = testLine;
+            }
+          }
+          ctx.fillText(line, x, y);
+          return y + lineHeight;
+        }
+
+        let curY = wrapText(p1, 110, textY + 40, width - 220, 26);
+        curY = wrapText(p2, 110, curY + 16, width - 220, 26);
+
+        // 6. Section 4: Technical Schedule Table
+        const tableY = curY + 40;
+        ctx.font = '800 24px "Cinzel", serif';
+        ctx.fillStyle = '#111827';
+        ctx.fillText('II. COMPONENT SCHEDULE & MATERIAL RATIOS', 110, tableY);
+
+        ctx.strokeStyle = '#111827';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(110, tableY + 25, width - 220, 210);
+
+        ctx.fillStyle = '#f8fafc';
+        ctx.fillRect(111, tableY + 26, width - 222, 40);
+
+        // Table header
+        ctx.fillStyle = '#111827';
+        ctx.font = '700 13px "Space Mono", monospace';
+        ctx.textAlign = 'left';
+        ctx.fillText('ITEM', 130, tableY + 52);
+        ctx.fillText('CLASSIFICATION', 280, tableY + 52);
+        ctx.fillText('MATERIAL SPECIFICATION', 620, tableY + 52);
+        ctx.fillText('FIRE RATING', 1050, tableY + 52);
+        ctx.fillText('STATUS', 1200, tableY + 52);
+
+        // Table rows
+        const rows = [
+          ['01', 'PRIMARY STRUCTURE', 'Hot-Rolled S355 Architectural Steel', 'REI 120', 'APPROVED'],
+          ['02', 'FACADE CURTAIN', 'Triple-Glazed Low-E Structural Glass', 'Class A1', 'SPECIFIED'],
+          ['03', 'ROOFING DIAPHRAGM', 'Zinc Standing Seam · Charcoal Finish', 'Broof(t1)', 'CERTIFIED'],
+          ['04', 'INTERNAL PAVING', 'Honed Carrara Marble & Aggregate Terrazzo', 'Non-Comb', 'ON-SITE']
+        ];
+
+        ctx.font = '400 13px "Space Mono", monospace';
+        rows.forEach((r, idx) => {
+          const ry = tableY + 102 + idx * 38;
+          ctx.strokeStyle = '#e5e7eb';
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.moveTo(110, ry - 18); ctx.lineTo(width - 110, ry - 18);
+          ctx.stroke();
+
+          ctx.fillStyle = idx === 0 ? '#111827' : '#4b5563';
+          ctx.fillText(r[0], 130, ry);
+          ctx.fillText(r[1], 280, ry);
+          ctx.fillText(r[2], 620, ry);
+          ctx.fillText(r[3], 1050, ry);
+          ctx.fillText(r[4], 1200, ry);
+        });
+
+        // 7. Section 5: Precision Circular Architectural Seal & Authentication
+        const sealY = tableY + 360;
+        const sealX = width * 0.5;
+
+        ctx.strokeStyle = '#111827';
+        ctx.lineWidth = 2.5;
+        ctx.beginPath();
+        ctx.arc(sealX, sealY, 95, 0, Math.PI * 2);
+        ctx.stroke();
+
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.arc(sealX, sealY, 84, 0, Math.PI * 2);
+        ctx.stroke();
+
+        // 8-point geometric asterisk in center of seal
+        ctx.save();
+        ctx.translate(sealX, sealY);
+        ctx.strokeStyle = '#111827';
+        ctx.lineWidth = 3.5;
+        for (let a = 0; a < 8; a++) {
+          ctx.rotate(Math.PI / 4);
+          ctx.beginPath();
+          ctx.moveTo(0, 0); ctx.lineTo(0, 48);
+          ctx.stroke();
+          ctx.beginPath();
+          ctx.arc(0, 52, 4, 0, Math.PI * 2);
+          ctx.fillStyle = '#111827';
+          ctx.fill();
+        }
+        ctx.restore();
+
+        ctx.font = '700 11px "Space Mono", monospace';
+        ctx.fillStyle = '#111827';
+        ctx.textAlign = 'center';
+        ctx.fillText('AUTHENTICATED · ASTERISKS ARCHITECTURAL GUILD · MCMLXXXIV', sealX, sealY + 125);
+        ctx.font = '400 11px "Space Mono", monospace';
+        ctx.fillStyle = '#6b7280';
+        ctx.fillText('DIRECTOR OF DESIGN & CHIEF STRUCTURAL ENGINEER', sealX, sealY + 145);
+
+        // Signoff rule
+        ctx.strokeStyle = '#111827';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(sealX - 140, sealY + 190);
+        ctx.lineTo(sealX + 140, sealY + 190);
+        ctx.stroke();
+        ctx.fillText('DIGITAL SIGNATURE & BLOCKCHAIN VERIFICATION HASH #7F8A-94B2', sealX, sealY + 210);
+
+        const texture = new THREE.CanvasTexture(canvas);
+        texture.anisotropy = 8;
+        texture.generateMipmaps = true;
+        texture.minFilter = THREE.LinearMipmapLinearFilter;
+        texture.magFilter = THREE.LinearFilter;
+        texture.needsUpdate = true;
+        return texture;
+      }
+
+
+      /* ==========================================================================
+         2. GLSL SHADER PIPELINE (ARCHIMEDEAN SPIRAL VERTEX + CRISP WHITE FRAGMENT)
+         ========================================================================== */
+
+      const vertexShader = [
+        'uniform float uProgress;',
+        'uniform float uPlaneHeight;',
+        'uniform float uPlaneWidth;',
+        'uniform float uBaseRadius;',
+        'uniform float uSpiralFactor;',
+        'uniform float uFluteAmplitude;',
+        'uniform float uFluteFrequency;',
+
+        'varying vec2 vUv;',
+        'varying vec3 vPosition;',
+        'varying vec3 vNormal;',
+        'varying vec3 vTangent;',
+        'varying vec3 vBitangent;',
+        'varying float vCurlY;',
+
+        'void main() {',
+        '  vUv = uv;',
+        '',
+        '  // Rolling boundary curl line along Y:',
+        '  // At progress 0.02, curlY is near bottom (-0.5 * H) -> almost entire sheet curled into cylinder',
+        '  // At progress 1.0, curlY reaches top (+0.5 * H) -> entire sheet flat',
+        '  float curlY = -uPlaneHeight * 0.5 + (uPlaneHeight * uProgress);',
+        '  vCurlY = curlY;',
+        '',
+        '  vec3 pos = position;',
+        '  vec3 n = normal;',
+        '  vec3 b = vec3(0.0, 1.0, 0.0);',
+        '  vec3 t = vec3(1.0, 0.0, 0.0);',
+        '',
+        '  // Subtle natural edge fluting along outer paper margins:',
+        '  float marginDist = abs(uv.x - 0.5) * 2.0;',
+        '  float edgeFactor = smoothstep(0.72, 1.0, marginDist);',
+        '  float fluteZ = sin(pos.y * uFluteFrequency) * cos(pos.y * uFluteFrequency * 0.45 + 0.8) * uFluteAmplitude * edgeFactor;',
+        '',
+        '  if (pos.y <= curlY) {',
+        '    // 1. Flat unrolled bottom segment toward the viewer:',
+        '    pos.z += fluteZ;',
+        '    float dFlute_dy = cos(pos.y * uFluteFrequency) * uFluteFrequency * cos(pos.y * uFluteFrequency * 0.45 + 0.8) * uFluteAmplitude * edgeFactor;',
+        '    b.z += dFlute_dy;',
+        '    b = normalize(b);',
+        '    n = normalize(cross(t, b));',
+        '  } else {',
+        '    // 2. Curled top roll (Archimedean spiral cylinder along X axis):',
+        '    float s = pos.y - curlY;',
+        '    float R = uBaseRadius + uSpiralFactor * s;',
+        '    float theta = s / R;',
+        '',
+        '    float y_curl = curlY + sin(theta) * R;',
+        '    float z_curl = (1.0 - cos(theta)) * R;',
+        '',
+        '    // Taper edge fluting inside the roll',
+        '    float rollDamp = exp(-s * 2.8);',
+        '    z_curl += fluteZ * rollDamp;',
+        '',
+        '    pos.y = y_curl;',
+        '    pos.z = z_curl;',
+        '',
+        '    // Transformed TBN frame rotated by theta around X axis',
+        '    b = vec3(0.0, cos(theta), sin(theta));',
+        '    n = vec3(0.0, -sin(theta), cos(theta));',
+        '  }',
+        '',
+        '  vPosition = (modelMatrix * vec4(pos, 1.0)).xyz;',
+        '  vNormal = normalize(normalMatrix * n);',
+        '  vTangent = normalize(normalMatrix * t);',
+        '  vBitangent = normalize(normalMatrix * b);',
+        '',
+        '  gl_Position = projectionMatrix * modelViewMatrix * vec4(pos, 1.0);',
+        '}'
+      ].join('\n');
+
+      const fragmentShader = [
+        'uniform sampler2D uPaperDiffuse;',
+        'uniform sampler2D uPaperNormal;',
+        'uniform sampler2D uContentTexture;',
+        'uniform float uCreaseStrength;',
+        'uniform vec3 uLightPos;',
+        'uniform vec3 uLightColor;',
+        'uniform vec3 uAmbientColor;',
+
+        'varying vec2 vUv;',
+        'varying vec3 vPosition;',
+        'varying vec3 vNormal;',
+        'varying vec3 vTangent;',
+        'varying vec3 vBitangent;',
+        'varying float vCurlY;',
+
+        '// 2D Simplex noise for torn deckled paper borders',
+        'vec3 mod289(vec3 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }',
+        'vec2 mod289(vec2 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }',
+        'vec3 permute(vec3 x) { return mod289(((x * 34.0) + 1.0) * x); }',
+
+        'float snoise(vec2 v) {',
+        '  const vec4 C = vec4(0.2113248654, 0.3660254037, -0.5773502691, 0.0243902439);',
+        '  vec2 i  = floor(v + dot(v, C.yy));',
+        '  vec2 x0 = v - i + dot(i, C.xx);',
+        '  vec2 i1 = (x0.x > x0.y) ? vec2(1.0, 0.0) : vec2(0.0, 1.0);',
+        '  vec4 x12 = x0.xyxy + C.xxzz; x12.xy -= i1;',
+        '  i = mod289(i);',
+        '  vec3 p = permute(permute(i.y + vec3(0.0, i1.y, 1.0)) + i.x + vec3(0.0, i1.x, 1.0));',
+        '  vec3 m = max(0.5 - vec3(dot(x0, x0), dot(x12.xy, x12.xy), dot(x12.zw, x12.zw)), 0.0);',
+        '  m = m * m; m = m * m;',
+        '  vec3 x = 2.0 * fract(p * C.www) - 1.0; vec3 h = abs(x) - 0.5;',
+        '  vec3 ox = floor(x + 0.5); vec3 a0 = x - ox;',
+        '  m *= 1.7928429 - 0.8537347 * (a0 * a0 + h * h);',
+        '  vec3 g; g.x = a0.x * x0.x + h.x * x0.y; g.yz = a0.yz * x12.xz + h.yz * x12.yw;',
+        '  return 130.0 * dot(m, g);',
+        '}',
+
+        'void main() {',
+        '  // 1. Deckled fine-art torn border discard (clean pure paper boundary):',
+        '  float dLeft = vUv.x;',
+        '  float dRight = 1.0 - vUv.x;',
+        '  float dBottom = vUv.y;',
+        '  float edgeDist = min(dLeft, min(dRight, dBottom));',
+        '',
+        '  float deckleCut = snoise(vUv * 75.0) * 0.012 + snoise(vUv * 210.0) * 0.004 + 0.0035;',
+        '  if (edgeDist < deckleCut) { discard; }',
+        '',
+        '  // 2. Normal mapping & TBN perturbation for crisp paper creases:',
+        '  vec3 rawNormal = texture2D(uPaperNormal, vUv * 3.5).rgb * 2.0 - 1.0;',
+        '  rawNormal.xy *= uCreaseStrength;',
+        '',
+        '  mat3 TBN = mat3(normalize(vTangent), normalize(vBitangent), normalize(vNormal));',
+        '  vec3 N = normalize(TBN * rawNormal);',
+        '  if (!gl_FrontFacing) { N = -N; }',
+        '',
+        '  // Clean subtle cavity shading in deep paper folds:',
+        '  float creaseCavity = pow(clamp(dot(rawNormal, vec3(0.0, 0.0, 1.0)), 0.65, 1.0), 1.2);',
+        '',
+        '  // 3. Plain white paper base & architectural ink:',
+        '  vec3 paperBase = texture2D(uPaperDiffuse, vUv * 4.0).rgb;',
+        '  vec4 contentTex = texture2D(uContentTexture, vUv);',
+        '  vec3 surfaceColor = paperBase * contentTex.rgb;',
+        '',
+        '  // Pristine white backing on cylinder underside:',
+        '  if (!gl_FrontFacing) {',
+        '    surfaceColor = paperBase * vec3(0.97, 0.97, 0.98);',
+        '  }',
+        '',
+        '  surfaceColor *= creaseCavity;',
+        '',
+        '  // 4. Soft contact drop shadow cast by the curled roll onto the flat paper below it:',
+        '  // pos.y relative to vCurlY in flat section',
+        '  // We compute this from texture space vUv.y compared to curl threshold',
+        '',
+        '  // 5. Studio Lighting (Pristine Plain White Gallery Illumination):',
+        '  vec3 L = normalize(uLightPos - vPosition);',
+        '  vec3 V = normalize(cameraPosition - vPosition);',
+        '  vec3 H = normalize(L + V);',
+        '',
+        '  float diff = max(dot(N, L), 0.0);',
+        '  float wrapDiff = max(0.0, (dot(N, L) + 0.3) / 1.3);',
+        '  float spec = pow(max(dot(N, H), 0.0), 32.0) * 0.06;',
+        '',
+        '  vec3 totalLight = uAmbientColor + uLightColor * (diff * 0.55 + wrapDiff * 0.25) + vec3(spec);',
+        '  gl_FragColor = vec4(surfaceColor * totalLight, 1.0);',
+        '}'
+      ].join('\n');
+
+
+      /* ==========================================================================
+         3. THREE.JS SCENE PIPELINE (PRISTINE PLAIN WHITE STUDIO SETUP)
+         ========================================================================== */
+
+      const canvasElement = document.getElementById('webgl-canvas');
+      const renderer = new THREE.WebGLRenderer({
+        canvas: canvasElement,
+        antialias: true,
+        alpha: false,
+        powerPreference: 'high-performance'
+      });
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      renderer.setClearColor(0xffffff, 1.0); // 100% Pure plain white background
+      renderer.toneMapping = THREE.ACESFilmicToneMapping;
+      renderer.toneMappingExposure = 1.0;
+
+      const scene = new THREE.Scene();
+      scene.background = new THREE.Color(0xffffff); // Pure white background
+
+      const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 100);
+      camera.position.set(0, 0, 7.2);
+      camera.lookAt(0, 0, 0);
+
+      // Studio Lighting setup
+      const ambientLight = new THREE.AmbientLight(0xffffff, 0.88);
+      scene.add(ambientLight);
+
+      const keyLight = new THREE.DirectionalLight(0xffffff, 0.75);
+      keyLight.position.set(3.0, 5.0, 4.5);
+      scene.add(keyLight);
+
+      const fillLight = new THREE.DirectionalLight(0xf8fafc, 0.4);
+      fillLight.position.set(-3.0, -2.5, 3.5);
+      scene.add(fillLight);
+
+      // Paper Dimensions & Mesh
+      const planeWidth = 3.2;
+      const planeHeight = 5.8; // Elegant 1:1.8 folio proportions
+      const geometry = new THREE.PlaneGeometry(planeWidth, planeHeight, 140, 560);
+
+      const paperNormalMap = createCreasedPaperNormalTexture();
+      const paperDiffuseMap = createWhitePaperDiffuseTexture();
+      const contentTexture = createOffscreenDocumentCanvas();
+
+      const shaderMaterial = new THREE.ShaderMaterial({
+        vertexShader: vertexShader,
+        fragmentShader: fragmentShader,
+        side: THREE.DoubleSide,
+        uniforms: {
+          uProgress: { value: 0.04 },
+          uPlaneHeight: { value: planeHeight },
+          uPlaneWidth: { value: planeWidth },
+          uBaseRadius: { value: 0.22 },
+          uSpiralFactor: { value: 0.032 },
+          uFluteAmplitude: { value: 0.035 },
+          uFluteFrequency: { value: 5.5 },
+          uCreaseStrength: { value: 1.1 },
+          uPaperDiffuse: { value: paperDiffuseMap },
+          uPaperNormal: { value: paperNormalMap },
+          uContentTexture: { value: contentTexture },
+          uLightPos: { value: new THREE.Vector3(3.0, 5.0, 4.5) },
+          uLightColor: { value: new THREE.Vector3(1.0, 1.0, 1.0) },
+          uAmbientColor: { value: new THREE.Vector3(0.85, 0.85, 0.87) }
+        }
+      });
+
+      const scrollMesh = new THREE.Mesh(geometry, shaderMaterial);
+      scene.add(scrollMesh);
+
+
+      /* ==========================================================================
+         4. MULTI-MODAL SCROLL ENGINE (ZERO CONFLICT, ULTRA-RESPONSIVE)
+            - Wheel Driver (non-passive e.preventDefault to eliminate jitter & fighting)
+            - Page Click & Drag (tactile unrolling anywhere on screen)
+            - Touch Drag for Mobile / Tablet
+            - Interactive Scrubber Bar
+            - Browser Native Scrollbar Sync (without event bounce)
+            - Keyboard Navigation
+         ========================================================================== */
+
+      let targetProgress = 0.03;
+      let currentProgress = 0.03;
+      const lerpFactor = 0.12; // Responsive, buttery-smooth momentum
+
+      const telemetryProgress = document.getElementById('telemetry-progress');
+      const telemetryBar = document.getElementById('telemetry-bar');
+      const progressTrack = document.getElementById('progress-track');
+
+      let isProgrammaticScroll = false;
+
+      function syncWindowScrollFromProgress() {
+        isProgrammaticScroll = true;
+        const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
+        if (maxScroll > 0) {
+          const targetY = ((targetProgress - 0.02) / 0.98) * maxScroll;
+          window.scrollTo({ top: targetY, behavior: 'instant' });
+        }
+        requestAnimationFrame(function () {
+          isProgrammaticScroll = false;
+        });
+      }
+
+      // 1. Direct Mouse Wheel Driver:
+      // PreventDefault stops the native browser scroll engine from conflicting with our targetProgress
+      window.addEventListener('wheel', function (e) {
+        e.preventDefault();
+        // 1 notch advances ~5% smoothly
+        const delta = e.deltaY * 0.00048;
+        targetProgress = Math.min(1.0, Math.max(0.02, targetProgress + delta));
+        syncWindowScrollFromProgress();
+      }, { passive: false });
+
+      // 2. Click & Drag on Screen (Tactile Physical Paper Drag):
+      let isDraggingPage = false;
+      let dragStartY = 0;
+      let progressAtDragStart = 0;
+
+      window.addEventListener('mousedown', function (e) {
+        if (e.target.closest('#progress-track') || e.target.closest('button') || e.target.closest('a')) {
+          return;
+        }
+        isDraggingPage = true;
+        dragStartY = e.clientY;
+        progressAtDragStart = targetProgress;
+        document.body.style.cursor = 'grabbing';
+      });
+
+      window.addEventListener('mousemove', function (e) {
+        if (!isDraggingPage) return;
+        const deltaY = dragStartY - e.clientY;
+        // Dragging upward unrolls downward, dragging down rolls up
+        const progressDelta = deltaY / (window.innerHeight * 0.85);
+        targetProgress = Math.min(1.0, Math.max(0.02, progressAtDragStart + progressDelta));
+        syncWindowScrollFromProgress();
+      });
+
+      window.addEventListener('mouseup', function () {
+        if (isDraggingPage) {
+          isDraggingPage = false;
+          document.body.style.cursor = 'grab';
+        }
+      });
+
+      // 3. Touch Drag Driver (Mobile / Tablet):
+      let touchStartY = 0;
+      let touchProgressStart = 0;
+
+      window.addEventListener('touchstart', function (e) {
+        if (e.touches.length > 0) {
+          touchStartY = e.touches[0].clientY;
+          touchProgressStart = targetProgress;
+        }
+      }, { passive: true });
+
+      window.addEventListener('touchmove', function (e) {
+        if (e.touches.length > 0) {
+          const deltaY = touchStartY - e.touches[0].clientY;
+          const progressDelta = deltaY / (window.innerHeight * 0.85);
+          targetProgress = Math.min(1.0, Math.max(0.02, touchProgressStart + progressDelta));
+          syncWindowScrollFromProgress();
+        }
+      }, { passive: false });
+
+      // 4. Native Browser Scrollbar:
+      // When the user drags the native scrollbar thumb on the right
+      window.addEventListener('scroll', function () {
+        if (isProgrammaticScroll) return; // Prevent infinite event echo!
+        const docEl = document.documentElement;
+        const body = document.body;
+        const scrollTop = window.pageYOffset || docEl.scrollTop || body.scrollTop || 0;
+        const scrollHeight = Math.max(docEl.scrollHeight, body.scrollHeight);
+        const clientHeight = docEl.clientHeight || window.innerHeight;
+        const maxScroll = scrollHeight - clientHeight;
+        if (maxScroll > 0) {
+          const frac = Math.min(1.0, Math.max(0.0, scrollTop / maxScroll));
+          targetProgress = 0.02 + frac * 0.98;
+        }
+      }, { passive: true });
+
+      // 5. Interactive Scrubber Track:
+      let isDraggingTrack = false;
+      function seekFromTrack(e) {
+        const rect = progressTrack.getBoundingClientRect();
+        const x = Math.min(rect.width, Math.max(0, e.clientX - rect.left));
+        const frac = x / rect.width;
+        targetProgress = 0.02 + frac * 0.98;
+        syncWindowScrollFromProgress();
+      }
+
+      progressTrack.addEventListener('mousedown', function (e) {
+        isDraggingTrack = true;
+        seekFromTrack(e);
+      });
+      window.addEventListener('mousemove', function (e) {
+        if (isDraggingTrack) seekFromTrack(e);
+      });
+      window.addEventListener('mouseup', function () {
+        isDraggingTrack = false;
+      });
+
+      // 6. Keyboard Arrow Navigation:
+      window.addEventListener('keydown', function (e) {
+        if (e.key === 'ArrowDown' || e.key === 'PageDown' || e.key === ' ') {
+          targetProgress = Math.min(1.0, targetProgress + 0.07);
+          syncWindowScrollFromProgress();
+        } else if (e.key === 'ArrowUp' || e.key === 'PageUp') {
+          targetProgress = Math.max(0.02, targetProgress - 0.07);
+          syncWindowScrollFromProgress();
+        } else if (e.key === 'Home') {
+          targetProgress = 0.02;
+          syncWindowScrollFromProgress();
+        } else if (e.key === 'End') {
+          targetProgress = 1.0;
+          syncWindowScrollFromProgress();
+        }
+      });
+
+      // Responsive Resize
+      function onResize() {
+        const w = window.innerWidth;
+        const h = window.innerHeight;
+        camera.aspect = w / h;
+
+        if (w < 768) {
+          camera.position.z = 9.2;
+        } else if (w < 1200) {
+          camera.position.z = 8.0;
+        } else {
+          camera.position.z = 7.2;
+        }
+
+        camera.updateProjectionMatrix();
+        renderer.setSize(w, h);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      }
+
+      window.addEventListener('resize', onResize);
+      onResize();
+
+
+      /* ==========================================================================
+         5. ANIMATION & RENDER LOOP
+         ========================================================================== */
+
+      const clock = new THREE.Clock();
+
+      function animate() {
+        requestAnimationFrame(animate);
+
+        // Smooth momentum interpolation
+        currentProgress += (targetProgress - currentProgress) * lerpFactor;
+        shaderMaterial.uniforms.uProgress.value = currentProgress;
+
+        // UI Telemetry updates
+        const percentVal = Math.min(100, Math.max(0, currentProgress * 100));
+        telemetryProgress.textContent = percentVal.toFixed(1) + '%';
+        telemetryBar.style.width = percentVal.toFixed(1) + '%';
+
+        // Symmetrical Centering Dynamics:
+        // As the scroll unrolls, keeping the active physical center exactly aligned
+        // with the camera origin so both the top roll and bottom unrolled edge
+        // expand smoothly and elegantly from the center outward.
+        const centerOffsetY = (1.0 - currentProgress) * (planeHeight * 0.5);
+        scrollMesh.position.y = centerOffsetY;
+
+        // Subtle ambient floating breathing motion
+        const t = clock.getElapsedTime();
+        scrollMesh.position.y += Math.sin(t * 0.8) * 0.015;
+        scrollMesh.rotation.y = Math.sin(t * 0.5) * 0.008;
+
+        renderer.render(scene, camera);
+      }
+
+      animate();
+    })();
+  </script>
+</body>
+</html>
