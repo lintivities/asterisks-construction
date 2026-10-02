@@ -1,17 +1,15 @@
 /**
- * GLSL Shaders for Asterisks Construction 3D Pinned Scroll-Unroll Experience.
+ * GLSL Shaders from scroll-unroll.html.
  * Features:
- * - Top-edge pinned Archimedean spiral roll (Y_pin = +visibleHeight * 0.5)
- * - Continuous downward paper feed as user scrolls through the folio
- * - Dual texture mapping: Front crumpled paper texture + architectural drawings,
- *   Back crumpled paper texture from stock video with 3D cylinder lighting.
+ * - Full-screen Archimedean spiral curl line along Y axis
+ * - Dual crumpled paper texture maps (front + back) with calibrated lighting
+ * - Multiply blend with dynamic architectural folio canvas
  */
 
 export const vertexShader = /* glsl */ `
   uniform float uProgress;
   uniform float uPlaneHeight;
   uniform float uPlaneWidth;
-  uniform float uVisibleHeight;
   uniform float uBaseRadius;
   uniform float uSpiralFactor;
 
@@ -22,42 +20,29 @@ export const vertexShader = /* glsl */ `
   void main() {
     vUv = uv;
 
-    // Pin line anchored at the top of the visible screen
-    float Y_pin = uVisibleHeight * 0.5;
-
-    // As user scrolls down, paper feeds downward out of the top roll
-    // At uProgress = 0.0: document is coiled at Y_pin
-    // At uProgress = 1.0: entire document has fed through and unrolled flat
-    float totalFeed = (uPlaneHeight - uVisibleHeight);
-    float feedOffset = uProgress * totalFeed;
-
-    // Position along the vertical axis before curling:
-    // Top of plane (uv.y = 1.0) starts at Y_pin and feeds downward
-    float flatY = position.y - (uPlaneHeight * 0.5) + Y_pin + feedOffset;
+    // Rolling boundary curl line along Y:
+    // At progress 0.02, curlY is near bottom (-0.5 * H) -> sheet curled into cylinder
+    // At progress 1.0, curlY reaches top (+0.5 * H) -> entire sheet flat across screen
+    float curlY = -uPlaneHeight * 0.5 + (uPlaneHeight * uProgress);
 
     vec3 pos = position;
-    pos.x = position.x;
     vec3 n = normal;
 
-    if (flatY <= Y_pin) {
-      // 1. Unrolled section: flat in front of the camera
-      pos.y = flatY;
+    if (pos.y <= curlY) {
+      // 1. Flat unrolled section flush with screen:
       pos.z = 0.0;
       n = vec3(0.0, 0.0, 1.0);
     } else {
-      // 2. Coiled section pinned at top edge (Archimedean spiral cylinder along X axis)
-      float s = flatY - Y_pin;
-      
-      // At the very bottom of scroll (uProgress > 0.96), uncurl the remaining roll
-      float uncurlFactor = smoothstep(0.96, 1.0, uProgress);
-      float R = mix(uBaseRadius + uSpiralFactor * s, uBaseRadius * 4.0, uncurlFactor);
-      float theta = mix(s / R, 0.0, uncurlFactor);
+      // 2. Curled top roll (Archimedean spiral cylinder along X axis):
+      float s = pos.y - curlY;
+      float R = uBaseRadius + uSpiralFactor * s;
+      float theta = s / R;
 
-      float y_curl = Y_pin + sin(theta) * R;
+      float y_curl = curlY + sin(theta) * R;
       float z_curl = (1.0 - cos(theta)) * R;
 
-      pos.y = mix(y_curl, flatY, uncurlFactor);
-      pos.z = mix(z_curl, 0.0, uncurlFactor);
+      pos.y = y_curl;
+      pos.z = z_curl;
 
       // Rotated normal around X axis
       n = vec3(0.0, -sin(theta), cos(theta));
@@ -83,7 +68,7 @@ export const fragmentShader = /* glsl */ `
   varying vec3 vNormal;
 
   void main() {
-    // Studio Directional Lighting for 3D roll curvature
+    // Directional Studio Lighting for 3D roll curvature depth
     vec3 L = normalize(uLightPos - vPosition);
     vec3 V = normalize(cameraPosition - vPosition);
     vec3 H = normalize(L + V);
@@ -94,7 +79,7 @@ export const fragmentShader = /* glsl */ `
 
     vec3 totalLight = uAmbientColor + uLightColor * (diff * 0.35 + wrapDiff * 0.15) + vec3(spec);
 
-    // 1. Backpage Texture (Underside of top cylinder roll)
+    // 1. Backpage Texture: Use realistic crumpled paper texture from video
     if (!gl_FrontFacing) {
       vec2 backUv = vec2(1.0 - vUv.x, vUv.y);
       vec3 backPaper = texture2D(uBackTexture, backUv).rgb;
@@ -103,12 +88,14 @@ export const fragmentShader = /* glsl */ `
       return;
     }
 
-    // 2. Frontpage Texture: Tactile crumpled paper texture multiplied with architectural drawings
+    // 2. Frontpage Texture: Rich, tactile crumpled paper texture clearly visible across the entire front
     vec3 frontPaper = texture2D(uFrontTexture, vUv).rgb;
+    // Contrast curve to make the crumpled paper folds pop tangibly and realistically
     frontPaper = pow(frontPaper, vec3(1.35));
 
     vec4 contentTex = texture2D(uContentTexture, vUv);
 
+    // Multiply blend architectural drawings with tactile crumpled paper texture
     vec3 surfaceColor = frontPaper * contentTex.rgb;
     gl_FragColor = vec4(surfaceColor * totalLight, 1.0);
   }
