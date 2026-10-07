@@ -1,0 +1,234 @@
+@import "tailwindcss" source(none);
+@source "../src";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+/*
+ * Asterisk Construction design system.
+ * Charcoal slate surfaces, terracotta primary, champagne gold highlights.
+ * All colors are oklch tokens registered in @theme inline.
+ */
+
+@theme inline {
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 8px);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-surface: var(--surface);
+  --color-surface-foreground: var(--surface-foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --font-display: "Syne", "Montserrat", sans-serif;
+  --font-sans: "Inter", system-ui, sans-serif;
+}
+
+:root {
+  --radius: 0rem;
+
+  /* Dark charcoal slate */
+  --background: oklch(0.18 0.006 250);
+  --foreground: oklch(1 0 0);
+
+  /* Off-white light surface */
+  --surface: oklch(0.979 0.003 85);
+  --surface-foreground: oklch(0.22 0.006 250);
+
+  --card: oklch(0.225 0.008 250);
+  --card-foreground: oklch(1 0 0);
+  --popover: oklch(0.205 0.008 250);
+  --popover-foreground: oklch(1 0 0);
+
+  /* Warm terracotta */
+  --primary: oklch(0.63 0.106 40);
+  --primary-foreground: oklch(1 0 0);
+
+  /* Champagne gold */
+  --accent: oklch(0.765 0.128 88);
+  --accent-foreground: oklch(0.22 0.006 250);
+
+  --secondary: oklch(0.27 0.01 250);
+  --secondary-foreground: oklch(1 0 0);
+  --muted: oklch(0.27 0.01 250);
+  --muted-foreground: oklch(0.72 0.008 250);
+
+  --destructive: oklch(0.58 0.22 27);
+  --destructive-foreground: oklch(1 0 0);
+
+  /* Structural concrete gray */
+  --border: oklch(0.29 0.009 250);
+  --input: oklch(0.29 0.009 250);
+  --ring: oklch(0.63 0.106 40);
+
+  --gradient-hero: linear-gradient(
+    180deg,
+    color-mix(in oklab, var(--background) 55%, transparent) 0%,
+    color-mix(in oklab, var(--background) 85%, transparent) 60%,
+    var(--background) 100%
+  );
+  --shadow-elevated: 0 24px 60px -24px oklch(0 0 0 / 0.7);
+  --shadow-glow: 0 0 0 1px color-mix(in oklab, var(--accent) 35%, transparent);
+}
+
+@layer base {
+  * {
+    border-color: var(--color-border);
+  }
+
+  html {
+    scroll-behavior: smooth;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    font-family: var(--font-sans);
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-family: var(--font-display);
+    letter-spacing: -0.02em;
+  }
+
+  :focus-visible {
+    outline: 3px solid var(--color-accent);
+    outline-offset: 3px;
+  }
+
+  section {
+    scroll-margin-top: 5.5rem;
+  }
+}
+
+/* Fluid type scale — readable from 320px phones up to 4K displays */
+@utility text-fluid-hero {
+  font-size: clamp(2.35rem, 6vw, 6rem);
+  line-height: 1.02;
+}
+
+@utility text-fluid-section {
+  font-size: clamp(1.75rem, 3.2vw, 3.5rem);
+  line-height: 1.08;
+}
+
+@utility text-fluid-body {
+  font-size: clamp(1rem, 1.05vw, 1.375rem);
+  line-height: 1.65;
+}
+
+@utility container-shell {
+  width: 100%;
+  margin-inline: auto;
+  max-width: 1440px;
+  padding-inline: clamp(1.25rem, 4vw, 3.5rem);
+}
+
+@media (min-width: 1921px) {
+  .container-shell {
+    max-width: 1800px;
+  }
+}
+
+@utility glass-header {
+  background-color: color-mix(in oklab, var(--background) 72%, transparent);
+  backdrop-filter: blur(12px) saturate(140%);
+  -webkit-backdrop-filter: blur(12px) saturate(140%);
+}
+
+@utility eyebrow {
+  font-family: var(--font-display);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: var(--color-accent);
+}
+
+@utility btn-base {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-height: 48px;
+  padding-inline: 1.5rem;
+  border-radius: var(--radius);
+  font-weight: 600;
+  font-size: 0.95rem;
+  transition:
+    transform 0.2s ease,
+    background-color 0.2s ease,
+    color 0.2s ease,
+    border-color 0.2s ease;
+}
+
+@utility btn-primary {
+  background-color: var(--color-primary);
+  color: var(--color-primary-foreground);
+  &:hover {
+    background-color: color-mix(in oklab, var(--primary) 88%, white);
+    transform: translateY(-2px);
+  }
+}
+
+@utility btn-gold {
+  background-color: var(--color-accent);
+  color: var(--color-accent-foreground);
+  &:hover {
+    background-color: color-mix(in oklab, var(--accent) 88%, white);
+    transform: translateY(-2px);
+  }
+}
+
+@utility btn-outline {
+  border: 1px solid var(--color-border);
+  color: var(--color-foreground);
+  &:hover {
+    border-color: var(--color-accent);
+    color: var(--color-accent);
+  }
+}
+
+@utility hairline-grid {
+  background-image:
+    linear-gradient(
+      to right,
+      color-mix(in oklab, var(--border) 60%, transparent) 1px,
+      transparent 1px
+    ),
+    linear-gradient(
+      to bottom,
+      color-mix(in oklab, var(--border) 60%, transparent) 1px,
+      transparent 1px
+    );
+  background-size: 72px 72px;
+}
+
+/* ---------- Motion layer (minimal) ---------- */
+.site-header { transition: background-color .3s ease, backdrop-filter .3s ease; }
+.site-header.is-scrolled { backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); }
+.project-card img { transition: transform 1.2s cubic-bezier(.2,.7,.2,1); }
+.project-card:hover img { transform: scale(1.03); }
+.modal-backdrop { backdrop-filter: blur(6px); }
+@media (prefers-reduced-motion: reduce) { .project-card:hover img { transform: none; } }

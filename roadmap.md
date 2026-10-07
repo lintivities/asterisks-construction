@@ -1,0 +1,2 @@
+- [x] Fix build after package update
+- [x] Generate downloadable design.md
