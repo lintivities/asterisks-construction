@@ -9,6 +9,7 @@ import { Quotation } from "@/components/site/quotation";
 import { Footer } from "@/components/site/footer";
 import { Motion } from "@/components/site/motion";
 import { FloatingWhatsApp } from "@/components/site/floating-whatsapp";
+import { CarvedWoodNavbar } from "@/components/site/CarvedWoodNavbar";
 import { PinnedTopRollCanvas } from "@/components/scroll-canvas/PinnedTopRollCanvas";
 import { PaperFolioContainer } from "@/components/scroll-canvas/PaperFolioContainer";
 
@@ -33,7 +34,10 @@ export const Route = createFileRoute("/")({
 function Index() {
   return (
     <>
-      {/* Prominent 3D Archimedean Spiral Roll anchored at the top of the viewport */}
+      {/* Sticky Carved Wood Navbar anchored to the wooden table surface */}
+      <CarvedWoodNavbar />
+
+      {/* 3D Archimedean Spiral Roll anchored & sticky to the top of the viewport */}
       <PinnedTopRollCanvas />
 
       {/* Architectural Parchment Paper Folio with Integrated Ledger, Drafting Frame, & Content */}

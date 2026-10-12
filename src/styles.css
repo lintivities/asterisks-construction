@@ -99,7 +99,12 @@
   }
 
   body {
-    background-color: var(--color-background);
+    background-color: #22160f;
+    background-image: url('/wood_texture.jpg');
+    background-attachment: fixed;
+    background-position: center top;
+    background-repeat: no-repeat;
+    background-size: cover;
     color: var(--color-foreground);
     font-family: var(--font-sans);
   }
