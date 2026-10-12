@@ -123,8 +123,8 @@ const rollFragmentShader = /* glsl */ `
     float finalAlpha = vAlpha * edgeAlpha;
     if (finalAlpha <= 0.01) discard;
 
-    // Tactile torn deckle fiber shading along the rim for crisp definition across all viewports
-    float fiberShade = mix(0.88, 1.0, smoothstep(0.0, 0.42, normX));
+    // Uniform clean edge brightness across all viewports with zero edge shadow
+    float fiberShade = 1.0;
 
     vec3 L = normalize(uLightPos - vPosition);
     vec3 V = vec3(0.0, 0.0, 1.0);
@@ -503,7 +503,7 @@ export function PinnedTopRollCanvas() {
       }
 
       // Dynamic visibility and drop shadow opacity based on fold progress:
-      // At resting flat state, opacity is 0.0 (completely flat with zero roll or shadow)
+      // At resting flat state, opacity is 0.0 (completely flat with zero roll)
       if (containerRef.current) {
         containerRef.current.style.opacity = `${Math.min(1.0, currentFoldProgress * 1.5).toFixed(3)}`;
       }
@@ -537,27 +537,11 @@ export function PinnedTopRollCanvas() {
 
   return (
     <>
-      {/* 
-        Impenetrable Viewport Background Occluder Shield (Anti-Peeking Clamping):
-        Fixed to the top of the viewport (top: 0), stretching down to rollTop across the full width.
-        Uses identical fixed building background canvas for 100% seamless alignment.
-        Because it is fixed at z-35, it physically prevents ANY scrolled canvas text, cards, or images
-        from ever peeking into the navbar area or above the 3D roll, even during high-velocity 120Hz flick scrolling!
-      */}
       <div
         ref={topOccluderRef}
         id="site-bg-top-occluder"
-        className="fixed top-0 left-0 right-0 pointer-events-none"
-        style={{
-          zIndex: 35,
-          backgroundColor: "#0d1520",
-          backgroundImage: "url('/building-background.jpg')",
-          backgroundAttachment: "fixed",
-          backgroundPosition: "center top",
-          backgroundRepeat: "no-repeat",
-          backgroundSize: "cover",
-          height: 0,
-        }}
+        className="hidden"
+        style={{ display: "none" }}
         aria-hidden="true"
       />
 
@@ -567,7 +551,6 @@ export function PinnedTopRollCanvas() {
         id="pinned-top-roll-container"
         className="fixed pointer-events-none z-40 overflow-visible"
         style={{
-          filter: "drop-shadow(0 14px 18px rgba(17, 24, 39, 0.16))",
           opacity: 0,
         }}
         aria-hidden="true"

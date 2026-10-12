@@ -100,11 +100,6 @@
 
   body {
     background-color: #0d1520;
-    background-image: url('/building-background.jpg');
-    background-attachment: fixed;
-    background-position: center top;
-    background-repeat: no-repeat;
-    background-size: cover;
     color: var(--color-foreground);
     font-family: var(--font-sans);
   }

@@ -10,6 +10,7 @@ import { Footer } from "@/components/site/footer";
 import { Motion } from "@/components/site/motion";
 import { FloatingWhatsApp } from "@/components/site/floating-whatsapp";
 import { CarvedWoodNavbar } from "@/components/site/CarvedWoodNavbar";
+import { ScrollableBuildingBackground } from "@/components/site/ScrollableBuildingBackground";
 import { PinnedTopRollCanvas } from "@/components/scroll-canvas/PinnedTopRollCanvas";
 import { PaperFolioContainer } from "@/components/scroll-canvas/PaperFolioContainer";
 
@@ -34,6 +35,9 @@ export const Route = createFileRoute("/")({
 function Index() {
   return (
     <>
+      {/* Dynamic Scrollable Building Background Canvas (Pans from top to bottom through the whole website) */}
+      <ScrollableBuildingBackground />
+
       {/* Sticky Carved Wood Navbar anchored to the wooden table surface */}
       <CarvedWoodNavbar />
 

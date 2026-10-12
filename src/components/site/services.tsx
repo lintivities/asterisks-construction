@@ -27,21 +27,21 @@ const services = [
 
 export function Services() {
   return (
-    <section id="services" className="hairline-grid border-t border-border">
+    <section id="services" className="hairline-grid border-t border-border bg-[#151c24]/95 text-white">
       <div className="container-shell py-20 lg:py-28">
-        <p className="eyebrow">Services Matrix</p>
-        <h2 className="text-fluid-section mt-5 max-w-[26ch] font-bold">
+        <p className="eyebrow text-accent font-bold tracking-[0.2em] uppercase">Services Matrix</p>
+        <h2 className="text-fluid-section mt-5 max-w-[26ch] font-black text-white">
           One accountable team, end to end.
         </h2>
 
         <div data-reveal className="mt-12 grid gap-px border border-border bg-border md:grid-cols-2 xl:grid-cols-3">
           {services.map((s, i) => (
-            <article key={s.title} className="service-card bg-background p-7 lg:p-9">
-              <span className="font-display text-sm font-bold text-primary">
+            <article key={s.title} className="service-card bg-[#1b2430] p-7 lg:p-9 border border-border/80">
+              <span className="font-display text-sm font-bold text-[#ff8e5a]">
                 {String(i + 1).padStart(2, "0")}.
               </span>
-              <h3 className="mt-4 font-display text-lg font-bold">{s.title}</h3>
-              <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{s.body}</p>
+              <h3 className="mt-4 font-display text-lg font-bold text-white">{s.title}</h3>
+              <p className="mt-3 text-sm leading-relaxed text-slate-200 font-medium">{s.body}</p>
             </article>
           ))}
         </div>
