@@ -538,20 +538,20 @@ export function PinnedTopRollCanvas() {
   return (
     <>
       {/* 
-        Impenetrable Viewport Wood Occluder Shield (Anti-Peeking Clamping):
+        Impenetrable Viewport Background Occluder Shield (Anti-Peeking Clamping):
         Fixed to the top of the viewport (top: 0), stretching down to rollTop across the full width.
-        Uses identical fixed wood texture for 100% seamless, invisible table alignment.
+        Uses identical fixed building background canvas for 100% seamless alignment.
         Because it is fixed at z-35, it physically prevents ANY scrolled canvas text, cards, or images
         from ever peeking into the navbar area or above the 3D roll, even during high-velocity 120Hz flick scrolling!
       */}
       <div
         ref={topOccluderRef}
-        id="site-wood-top-occluder"
+        id="site-bg-top-occluder"
         className="fixed top-0 left-0 right-0 pointer-events-none"
         style={{
           zIndex: 35,
-          backgroundColor: "#22160f",
-          backgroundImage: "url('/wood_texture.jpg')",
+          backgroundColor: "#0d1520",
+          backgroundImage: "url('/building-background.jpg')",
           backgroundAttachment: "fixed",
           backgroundPosition: "center top",
           backgroundRepeat: "no-repeat",
@@ -561,7 +561,7 @@ export function PinnedTopRollCanvas() {
         aria-hidden="true"
       />
 
-      {/* 3D Roll Canvas: Fixed/Sticky to the viewport, pinned below the sticky wood navbar */}
+      {/* 3D Roll Canvas: Fixed/Sticky to the viewport, pinned below the sticky navbar */}
       <div
         ref={containerRef}
         id="pinned-top-roll-container"
@@ -575,13 +575,13 @@ export function PinnedTopRollCanvas() {
         <canvas ref={canvasRef} id="pinned-top-roll-canvas" className="w-full h-full block" />
       </div>
 
-      {/* Soft Contact Shadow positioned safely under the 3D fold on the wooden table, inset from deckle edges */}
+      {/* Soft Contact Shadow positioned safely under the 3D fold on the background canvas, inset from deckle edges */}
       <div
         ref={shadowRef}
         className="fixed pointer-events-none z-36 transition-opacity duration-150 h-12"
         style={{
           background:
-            "linear-gradient(to bottom, rgba(15, 10, 6, 0.40) 0%, rgba(15, 10, 6, 0.10) 65%, transparent 100%)",
+            "linear-gradient(to bottom, rgba(13, 21, 32, 0.45) 0%, rgba(13, 21, 32, 0.10) 65%, transparent 100%)",
           filter: "blur(4px)",
           borderRadius: "4px",
           opacity: 0,

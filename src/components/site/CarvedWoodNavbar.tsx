@@ -86,7 +86,7 @@ export function CarvedWoodNavbar() {
           </a>
         </nav>
 
-        {/* Mobile Hamburger: Carved into the wood table surface */}
+        {/* Mobile Hamburger Button */}
         <button
           type="button"
           onClick={() => setIsOpen((prev) => !prev)}
@@ -94,8 +94,9 @@ export function CarvedWoodNavbar() {
           aria-label={isOpen ? "Close navigation menu" : "Open navigation menu"}
           className="lg:hidden relative grid h-10 w-10 place-items-center rounded-sm transition-all focus:outline-none"
           style={{
-            backgroundColor: "rgba(22, 14, 9, 0.75)",
-            border: "1px solid rgba(255, 255, 255, 0.12)",
+            backgroundColor: "rgba(13, 21, 32, 0.85)",
+            backdropFilter: "blur(8px)",
+            border: "1px solid rgba(255, 255, 255, 0.16)",
             boxShadow:
               "inset 0 1px 3px rgba(0, 0, 0, 0.8), 0 1px 0 rgba(255, 255, 255, 0.15)",
           }}
