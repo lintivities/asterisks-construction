@@ -1,5 +1,6 @@
 import React, { useEffect, useRef } from "react";
 import * as THREE from "three";
+import { getOptimalDpr, isTouchDevice, isLowEndDevice } from "@/lib/performance";
 
 /**
  * 3D Sticky Archimedean Spiral Roll in Three.js
@@ -175,7 +176,7 @@ export function PinnedTopRollCanvas() {
       alpha: true, // Transparent background so paper canvas underneath is visible
       powerPreference: "high-performance",
     });
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setPixelRatio(getOptimalDpr());
     renderer.setClearColor(0x000000, 0);
 
     const scene = new THREE.Scene();
@@ -354,7 +355,7 @@ export function PinnedTopRollCanvas() {
       updateRollPosition();
 
       renderer.setSize(canvasW, containerH);
-      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      renderer.setPixelRatio(getOptimalDpr());
 
       // Configure orthographic camera frustum to match canvas dimensions in exact pixel units
       camera.left = -canvasW * 0.5;
@@ -376,8 +377,11 @@ export function PinnedTopRollCanvas() {
         mesh.geometry.dispose();
       }
 
-      // Geometry width is EXACTLY canvasW — 100% matched to #paper-canvas-folio with zero side overlap
-      const geometry = new THREE.PlaneGeometry(canvasW, totalH, 200, 320);
+      // Responsive geometry density: reduce vertex count on mobile / lite devices to prevent GPU fill-rate exhaustion
+      const isLite = isTouchDevice() || isLowEndDevice() || window.innerWidth < 1024;
+      const segX = isLite ? 60 : 160;
+      const segY = isLite ? 80 : 240;
+      const geometry = new THREE.PlaneGeometry(canvasW, totalH, segX, segY);
       geometry.translate(0, curlY + (rollSheetLength - lipLength) * 0.5, 0);
 
       mesh = new THREE.Mesh(geometry, shaderMaterial);
@@ -406,7 +410,16 @@ export function PinnedTopRollCanvas() {
 
     updateDimensions();
 
+    let isDirty = true;
+    let idleFrames = 0;
+
+    const markDirty = () => {
+      isDirty = true;
+      idleFrames = 0;
+    };
+
     const handleScroll = () => {
+      markDirty();
       const docEl = document.documentElement;
       const body = document.body;
       const scrollTop =
@@ -437,8 +450,6 @@ export function PinnedTopRollCanvas() {
       currentProgress = targetProgress;
 
       // Synchronize 3D roll rotation angle directly to the linear scroll speed:
-      // Texture pattern repeats every 512px. Setting uScrollAngle = scrollTop / 512.0
-      // ensures the 3D cylinder roll rotates at the EXACT same linear speed as the paper scrolling into it!
       if (shaderMaterial.uniforms["uScrollAngle"]) {
         shaderMaterial.uniforms["uScrollAngle"].value = scrollTop / 512.0;
       }
@@ -469,50 +480,66 @@ export function PinnedTopRollCanvas() {
       animationFrameId = requestAnimationFrame(animate);
 
       // Smooth tracking for dynamic mobile menu expansion/collapse
-      if (Math.abs(targetFoldProgress - currentFoldProgress) > 0.001) {
+      const foldDelta = Math.abs(targetFoldProgress - currentFoldProgress);
+      if (foldDelta > 0.0008) {
         currentFoldProgress += (targetFoldProgress - currentFoldProgress) * 0.35;
-      } else {
+        isDirty = true;
+      } else if (currentFoldProgress !== targetFoldProgress) {
         currentFoldProgress = targetFoldProgress;
+        isDirty = true;
       }
 
       if (targetFoldProgress === 0.0 && currentFoldProgress < 0.015) {
         currentFoldProgress = 0.0;
+        isDirty = true;
       }
 
       // Smoothly decay scroll velocity flex
-      scrollVelocity *= 0.85;
-
-      // Continuous frame-accurate roll tracking
-      updateRollPosition();
-
-      if (shaderMaterial.uniforms["uProgress"]) {
-        shaderMaterial.uniforms["uProgress"].value = currentProgress;
-      }
-      if (shaderMaterial.uniforms["uFoldProgress"]) {
-        shaderMaterial.uniforms["uFoldProgress"].value = currentFoldProgress;
-      }
-      if (shaderMaterial.uniforms["uScrollDelta"]) {
-        shaderMaterial.uniforms["uScrollDelta"].value = scrollVelocity;
-      }
-      const sTop = window.pageYOffset || document.documentElement.scrollTop || 0;
-      if (shaderMaterial.uniforms["uScrollAngle"]) {
-        shaderMaterial.uniforms["uScrollAngle"].value = sTop / 512.0;
-      }
-      if (shaderMaterial.uniforms["uDeckleOffsetY"]) {
-        shaderMaterial.uniforms["uDeckleOffsetY"].value = sTop;
+      if (Math.abs(scrollVelocity) > 0.001) {
+        scrollVelocity *= 0.85;
+        isDirty = true;
+      } else if (scrollVelocity !== 0) {
+        scrollVelocity = 0;
+        isDirty = true;
       }
 
-      // Dynamic visibility and drop shadow opacity based on fold progress:
-      // At resting flat state, opacity is 0.0 (completely flat with zero roll)
-      if (containerRef.current) {
-        containerRef.current.style.opacity = `${Math.min(1.0, currentFoldProgress * 1.5).toFixed(3)}`;
-      }
-      if (shadowRef.current) {
-        const shadowOpacity = currentFoldProgress * Math.max(0.15, 1.0 - currentProgress * 0.85);
-        shadowRef.current.style.opacity = `${shadowOpacity.toFixed(3)}`;
-      }
+      if (isDirty) {
+        // Continuous frame-accurate roll tracking
+        updateRollPosition();
 
-      renderer.render(scene, camera);
+        if (shaderMaterial.uniforms["uProgress"]) {
+          shaderMaterial.uniforms["uProgress"].value = currentProgress;
+        }
+        if (shaderMaterial.uniforms["uFoldProgress"]) {
+          shaderMaterial.uniforms["uFoldProgress"].value = currentFoldProgress;
+        }
+        if (shaderMaterial.uniforms["uScrollDelta"]) {
+          shaderMaterial.uniforms["uScrollDelta"].value = scrollVelocity;
+        }
+        const sTop = window.pageYOffset || document.documentElement.scrollTop || 0;
+        if (shaderMaterial.uniforms["uScrollAngle"]) {
+          shaderMaterial.uniforms["uScrollAngle"].value = sTop / 512.0;
+        }
+        if (shaderMaterial.uniforms["uDeckleOffsetY"]) {
+          shaderMaterial.uniforms["uDeckleOffsetY"].value = sTop;
+        }
+
+        // Dynamic visibility and drop shadow opacity based on fold progress:
+        if (containerRef.current) {
+          containerRef.current.style.opacity = `${Math.min(1.0, currentFoldProgress * 1.5).toFixed(3)}`;
+        }
+        if (shadowRef.current) {
+          const shadowOpacity = currentFoldProgress * Math.max(0.15, 1.0 - currentProgress * 0.85);
+          shadowRef.current.style.opacity = `${shadowOpacity.toFixed(3)}`;
+        }
+
+        renderer.render(scene, camera);
+
+        idleFrames++;
+        if (idleFrames > 3 && foldDelta <= 0.0008 && Math.abs(scrollVelocity) <= 0.001) {
+          isDirty = false;
+        }
+      }
     };
 
     animate();

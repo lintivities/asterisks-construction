@@ -21,19 +21,7 @@ export function PaperFolioContainer({ children }: PaperFolioContainerProps) {
         {/* Central Architectural Parchment Paper Folio with Authentic Torn Deckled Edges */}
         <div
           id="paper-canvas-folio"
-          className="relative w-full min-h-screen bg-[rgba(250,249,246,0.50)] text-foreground overflow-visible rounded-[2px]"
-          style={{
-            WebkitMaskImage:
-              "url('/assets/textures/deckle-edge-left.png'), url('/assets/textures/deckle-edge-right.png'), linear-gradient(#000, #000)",
-            WebkitMaskPosition: "left top, right top, center top",
-            WebkitMaskSize: "40px 512px, 40px 512px, calc(100% - 78px) 100%",
-            WebkitMaskRepeat: "repeat-y, repeat-y, no-repeat",
-            maskImage:
-              "url('/assets/textures/deckle-edge-left.png'), url('/assets/textures/deckle-edge-right.png'), linear-gradient(#000, #000)",
-            maskPosition: "left top, right top, center top",
-            maskSize: "40px 512px, 40px 512px, calc(100% - 78px) 100%",
-            maskRepeat: "repeat-y, repeat-y, no-repeat",
-          }}
+          className="folio-deckle-mask relative w-full min-h-screen bg-[rgba(250,249,246,0.50)] text-foreground overflow-visible rounded-[2px]"
         >
 
           {/* Authentic Master Parchment Texture matching the Folding Roll */}
