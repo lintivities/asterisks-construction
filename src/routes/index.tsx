@@ -14,6 +14,7 @@ import { ScrollableBuildingBackground } from "@/components/site/ScrollableBuildi
 import { PinnedTopRollCanvas } from "@/components/scroll-canvas/PinnedTopRollCanvas";
 import { PaperFolioContainer } from "@/components/scroll-canvas/PaperFolioContainer";
 import { SeoSchema } from "@/components/site/seo-schema";
+import { Faq } from "@/components/site/faq";
 
 const title =
   "Asterisk Construction — Design & Build Contractors in Nairobi, Kenya | Architectural Engineering & Turnkey Projects";
@@ -82,6 +83,7 @@ function Index() {
           <Projects />
           <Benchmarks />
           <Team />
+          <Faq />
           <Quotation />
         </main>
         <Footer />

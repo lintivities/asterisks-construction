@@ -1,5 +1,6 @@
 import { projectsData } from "@/data/projects";
 import { teamData } from "@/data/team";
+import { faqs } from "@/components/site/faq";
 import { PHONE_DISPLAY, EMAIL } from "@/lib/whatsapp";
 
 const SITE_URL = "https://asterisksconstruction.com";
@@ -137,6 +138,19 @@ export function SeoSchema() {
     })),
   };
 
+  const faqSchema = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: faqs.map((f) => ({
+      "@type": "Question",
+      name: f.question,
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: f.answer,
+      },
+    })),
+  };
+
   return (
     <>
       <script
@@ -146,6 +160,10 @@ export function SeoSchema() {
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(portfolioSchema) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
       />
     </>
   );
