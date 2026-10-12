@@ -14,7 +14,11 @@ export interface Project {
   image: string;
 }
 
-export const projectsData: Project[] = (rawProjects as Project[]).map((p) => ({
-  ...p,
-  image: p.image.startsWith("/") ? p.image : `/${p.image}`,
-}));
+export const projectsData: Project[] = (rawProjects as Project[]).map((p) => {
+  const baseImg = p.image.startsWith("/") ? p.image : `/${p.image}`;
+  return {
+    ...p,
+    image: baseImg.replace(/\.png$/, ".webp"),
+  };
+});
+

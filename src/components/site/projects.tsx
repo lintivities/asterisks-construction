@@ -148,6 +148,7 @@ export function Projects() {
                         src={p.image}
                         alt={`${p.title}, ${p.location}`}
                         loading="lazy"
+                        decoding="async"
                         width={1280}
                         height={960}
                         className="h-full w-full object-cover transition-transform duration-500 hover:scale-105"
@@ -271,6 +272,7 @@ export function Projects() {
                   <img
                     src={active.image}
                     alt={active.title}
+                    decoding="async"
                     width={1280}
                     height={800}
                     className="h-full w-full object-cover"

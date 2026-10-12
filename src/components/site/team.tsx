@@ -33,6 +33,7 @@ export function Team() {
                   src={m.image}
                   alt={`${m.name} - ${m.role}`}
                   loading="lazy"
+                  decoding="async"
                   width={256}
                   height={256}
                   className="h-full w-full object-cover object-top transition-transform duration-500 group-hover:scale-108"
