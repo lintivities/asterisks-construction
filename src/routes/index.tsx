@@ -13,6 +13,7 @@ import { CarvedWoodNavbar } from "@/components/site/CarvedWoodNavbar";
 import { ScrollableBuildingBackground } from "@/components/site/ScrollableBuildingBackground";
 import { PinnedTopRollCanvas } from "@/components/scroll-canvas/PinnedTopRollCanvas";
 import { PaperFolioContainer } from "@/components/scroll-canvas/PaperFolioContainer";
+import { SeoSchema } from "@/components/site/seo-schema";
 
 const title = "Asterisk Construction — Building Africa's Future, Today";
 const description =
@@ -35,6 +36,9 @@ export const Route = createFileRoute("/")({
 function Index() {
   return (
     <>
+      {/* Schema.org JSON-LD Structured Data for Google Rich Snippets */}
+      <SeoSchema />
+
       {/* Dynamic Scrollable Building Background Canvas (Pans from top to bottom through the whole website) */}
       <ScrollableBuildingBackground />
 
