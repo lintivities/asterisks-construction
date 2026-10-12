@@ -12,3 +12,6 @@ Allow: /
 
 User-agent: *
 Allow: /
+
+# Sitemap Index Directive
+Sitemap: https://asterisksconstruction.com/sitemap.xml
