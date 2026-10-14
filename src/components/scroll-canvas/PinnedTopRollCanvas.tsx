@@ -325,8 +325,8 @@ export function PinnedTopRollCanvas() {
         topOccluderRef.current.style.opacity = currentFoldProgress > 0.01 ? "1" : "0";
       }
 
-      // Dynamically compute and update deckle width uniform (34px to 44px) so it's always prominent across all viewports
-      const decklePixelWidth = Math.max(34.0, Math.min(44.0, canvasW * 0.05));
+      // Synchronize deckle width uniform to match CSS mask exactly: 24px on mobile (< 768px), 40px on desktop
+      const decklePixelWidth = canvasW < 768 ? 24.0 : 40.0;
       const deckleNorm = decklePixelWidth / canvasW;
       if (shaderMaterial.uniforms["uDeckleWidthNorm"]) {
         shaderMaterial.uniforms["uDeckleWidthNorm"].value = deckleNorm;
@@ -415,7 +415,7 @@ export function PinnedTopRollCanvas() {
       mesh.position.set(0, 0, 0);
       scene.add(mesh);
 
-      const decklePixelWidth = Math.max(34.0, Math.min(44.0, canvasW * 0.05));
+      const decklePixelWidth = canvasW < 768 ? 24.0 : 40.0;
       const uniforms = shaderMaterial.uniforms;
       if (uniforms["uContainerHeight"]) uniforms["uContainerHeight"].value = containerH;
       if (uniforms["uBaseRadius"]) uniforms["uBaseRadius"].value = baseRadius;

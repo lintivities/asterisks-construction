@@ -35,7 +35,7 @@ export function PaperFolioContainer({ children }: PaperFolioContainerProps) {
           />
 
           {/* Technical Drafting Frame: Outer & Inner Margin Borders positioned safely inside deckles */}
-          <div className="absolute inset-3 sm:inset-4 md:inset-5 border border-[#cbd5e1] pointer-events-none z-10">
+          <div className="absolute inset-y-3 inset-x-5 sm:inset-4 md:inset-5 border border-[#cbd5e1] pointer-events-none z-10">
             {/* 4 Precision Corner Crosshairs */}
             <div className="absolute -top-2.5 -left-2.5 w-5 h-5 flex items-center justify-center">
               <span className="absolute w-5 h-px bg-slate-900" />
@@ -72,7 +72,7 @@ export function PaperFolioContainer({ children }: PaperFolioContainerProps) {
           </div>
 
         {/* Architectural Master Folio Ledger Sheet Stamp */}
-        <div className="relative z-20 pt-8 sm:pt-10 px-4 sm:px-8 md:px-12 lg:px-16 pb-5 border-b border-[#cbd5e1]">
+        <div className="relative z-20 pt-8 sm:pt-10 px-5 sm:px-8 md:px-12 lg:px-16 pb-5 border-b border-[#cbd5e1]">
           <div className="flex flex-wrap items-center justify-between gap-4">
             <div className="flex items-center gap-3">
               <span className="grid h-8 w-8 shrink-0 place-items-center rounded-sm bg-[#c85a32] font-display text-base font-bold text-white shadow-xs">
@@ -97,7 +97,7 @@ export function PaperFolioContainer({ children }: PaperFolioContainerProps) {
         </div>
 
         {/* Main Content Container with Lateral Margins for Separation of Concerns */}
-        <div className="relative z-20 px-3 sm:px-6 md:px-10 lg:px-14 xl:px-16 pt-6 pb-20">
+        <div className="relative z-20 px-4 sm:px-6 md:px-10 lg:px-14 xl:px-16 pt-6 pb-20">
           {children}
         </div>
       </div>
