@@ -57,8 +57,8 @@ const rollVertexShader = /* glsl */ `
       pos.y = position.y;
       pos.z = 0.0;
       n = vec3(0.0, 0.0, 1.0);
-      // When flat at scrollTop = 0, roll mesh has 0 opacity (canvas underneath is laid flat)
-      vAlpha = (uFoldProgress <= 0.001) ? 0.0 : (smoothstep(-16.0, 0.0, s) * smoothstep(0.0, 0.2, uFoldProgress));
+      // Solid opaque parchment apron tucking securely over the unfolded canvas (zero detachment gap)
+      vAlpha = (uFoldProgress <= 0.001) ? 0.0 : smoothstep(0.0, 0.2, uFoldProgress);
     } else {
       // 2. Active 3D Archimedean spiral curl (progressively folding upward and coiling into the roll)
       float curlBlend = smoothstep(0.0, 0.45, uFoldProgress);
@@ -205,17 +205,43 @@ export function PinnedTopRollCanvas() {
     fillLight.position.set(-300, -100, 250);
     scene.add(fillLight);
 
+    // Render loop dirty tracker
+    let isDirty = true;
+    let idleFrames = 0;
+    const markDirty = () => {
+      isDirty = true;
+      idleFrames = 0;
+    };
+
     // Load authentic paper textures: front and back sharing identical master parchment texture
     const textureLoader = new THREE.TextureLoader();
-    const backPaperTexture = textureLoader.load("/assets/textures/roll-torn-paper-back.png");
+    const backPaperTexture = textureLoader.load(
+      "/assets/textures/roll-torn-paper-back.png",
+      () => {
+        backPaperTexture.needsUpdate = true;
+        markDirty();
+      }
+    );
     backPaperTexture.wrapS = THREE.ClampToEdgeWrapping;
     backPaperTexture.wrapT = THREE.RepeatWrapping;
 
-    const frontPaperTexture = textureLoader.load("/assets/textures/master-parchment-front.png");
+    const frontPaperTexture = textureLoader.load(
+      "/assets/textures/master-parchment-front.png",
+      () => {
+        frontPaperTexture.needsUpdate = true;
+        markDirty();
+      }
+    );
     frontPaperTexture.wrapS = THREE.ClampToEdgeWrapping;
     frontPaperTexture.wrapT = THREE.RepeatWrapping;
 
-    const deckleMaskTexture = textureLoader.load("/assets/textures/deckle-alpha-mask.png");
+    const deckleMaskTexture = textureLoader.load(
+      "/assets/textures/deckle-alpha-mask.png",
+      () => {
+        deckleMaskTexture.needsUpdate = true;
+        markDirty();
+      }
+    );
     deckleMaskTexture.wrapS = THREE.ClampToEdgeWrapping;
     deckleMaskTexture.wrapT = THREE.RepeatWrapping;
 
@@ -239,7 +265,7 @@ export function PinnedTopRollCanvas() {
         uDeckleMask: { value: deckleMaskTexture },
         uLightPos: { value: new THREE.Vector3(300, 180, 350) },
         uLightColor: { value: new THREE.Vector3(0.35, 0.35, 0.35) },
-        uAmbientColor: { value: new THREE.Vector3(0.82, 0.82, 0.82) },
+        uAmbientColor: { value: new THREE.Vector3(0.92, 0.90, 0.88) },
       },
     });
 
@@ -296,6 +322,7 @@ export function PinnedTopRollCanvas() {
       // Physically guarantees zero-peeking during rapid flick scrolling!
       if (topOccluderRef.current) {
         topOccluderRef.current.style.height = `${Math.max(0, rollTop)}px`;
+        topOccluderRef.current.style.opacity = currentFoldProgress > 0.01 ? "1" : "0";
       }
 
       // Dynamically compute and update deckle width uniform (34px to 44px) so it's always prominent across all viewports
@@ -326,15 +353,15 @@ export function PinnedTopRollCanvas() {
       shadowRef.current.style.width = `${canvasW - 48}px`;
 
       // Absolute guarantee: NO unfolded canvas ever appears above rollTop or the roll contact line!
-      const apexCut = rollTop - r.top;
-      const curlCut = screenCurlY - r.top - 4.0;
+      // Flat canvas extends 12px underneath the solid roll contact line to guarantee zero detachment gap:
+      const curlCut = screenCurlY - r.top - 12.0;
 
       if (currentFoldProgress <= 0.005 && r.top >= rollTop) {
         // Completely flat at resting position safely below the navbar
         pEl.style.clipPath = "none";
         if (wrapEl) wrapEl.style.clipPath = "none";
       } else {
-        const cutTop = Math.max(0, Math.round(apexCut), Math.round(curlCut));
+        const cutTop = Math.max(0, Math.round(curlCut));
         pEl.style.clipPath = `inset(${cutTop}px 0 0 0)`;
         if (wrapEl) wrapEl.style.clipPath = `inset(${cutTop}px 0 0 0)`;
       }
@@ -370,7 +397,7 @@ export function PinnedTopRollCanvas() {
 
       // Deep multi-turn coil length tucking the inner termination safely inside the roll core
       const rollSheetLength = baseRadius * 11.5;
-      const lipLength = 16.0;
+      const lipLength = 24.0;
       const totalH = rollSheetLength + lipLength;
 
       if (mesh) {
@@ -409,14 +436,6 @@ export function PinnedTopRollCanvas() {
     }
 
     updateDimensions();
-
-    let isDirty = true;
-    let idleFrames = 0;
-
-    const markDirty = () => {
-      isDirty = true;
-      idleFrames = 0;
-    };
 
     const handleScroll = () => {
       markDirty();
@@ -567,8 +586,8 @@ export function PinnedTopRollCanvas() {
       <div
         ref={topOccluderRef}
         id="site-bg-top-occluder"
-        className="hidden"
-        style={{ display: "none" }}
+        className="fixed top-0 left-0 right-0 z-35 pointer-events-none bg-[#0d1520] transition-opacity duration-150"
+        style={{ height: 0, opacity: 0 }}
         aria-hidden="true"
       />
 

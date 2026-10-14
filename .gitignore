@@ -23,6 +23,9 @@ dist-ssr
 # Vercel
 .vercel/
 
+# Scratch & temporary workspace files
+scratch/
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
