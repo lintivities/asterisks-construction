@@ -62,33 +62,33 @@ export function Hero() {
         aria-hidden="true"
       />
 
-      <div className="container-shell flex min-h-[92vh] flex-col justify-end pt-32 pb-14 lg:pt-40 lg:pb-20">
-        <p className="eyebrow">Design &amp; Build · Nairobi, Kenya</p>
-        <h1 className="text-fluid-hero mt-5 max-w-[22ch] font-bold">
+      <div className="container-shell flex min-h-[92vh] flex-col justify-end pt-32 pb-14 lg:pt-40 lg:pb-20 text-white">
+        <p className="eyebrow text-accent font-bold tracking-[0.2em] uppercase">Design &amp; Build · Nairobi, Kenya</p>
+        <h1 className="text-fluid-hero mt-5 max-w-[22ch] font-black text-white drop-shadow-md">
           Building Africa&apos;s Future, Today.
         </h1>
-        <p className="text-fluid-body mt-6 max-w-[62ch] text-muted-foreground">
+        <p className="text-fluid-body mt-6 max-w-[62ch] text-slate-100 font-medium leading-relaxed drop-shadow-sm">
           Sustainable, high-end infrastructure, residential, and commercial developments across
           Kenya and Pan-Africa.
         </p>
 
         <div className="mt-9 flex flex-col gap-3 sm:flex-row">
-          <a href={whatsappLink()} target="_blank" rel="noreferrer" className="btn-base btn-primary">
+          <a href={whatsappLink()} target="_blank" rel="noreferrer" className="btn-base btn-primary font-bold shadow-md">
             <WaIcon className="h-4 w-4" />
             Request Quote via WhatsApp
           </a>
-          <a href="#projects" className="btn-base btn-outline">
+          <a href="#projects" className="btn-base btn-outline font-bold border-white/60 text-white hover:bg-white hover:text-slate-950">
             View Projects
           </a>
         </div>
 
         <dl data-reveal className="mt-14 grid gap-px overflow-hidden border border-border bg-border sm:grid-cols-3">
           {metrics.map((m) => (
-            <div key={m.label} className="bg-card/80 px-6 py-7">
+            <div key={m.label} className="bg-card/95 px-6 py-7">
               <dt className="sr-only">{m.label}</dt>
               <dd>
                 <Counter value={m.value} suffix={m.suffix} />
-                <span className="mt-2 block text-xs tracking-[0.22em] uppercase text-muted-foreground">
+                <span className="mt-2 block text-xs tracking-[0.22em] uppercase text-slate-200 font-bold">
                   {m.label}
                 </span>
               </dd>

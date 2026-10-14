@@ -32,29 +32,35 @@ export function Motion() {
     els.forEach((el) => io.observe(el));
 
     let destroy = () => {};
-    import("lenis").then(({ default: Lenis }) => {
-      const lenis = new Lenis({ duration: 1.1, smoothWheel: true });
-      let id = 0;
-      const raf = (t: number) => {
-        lenis.raf(t);
+    // On mobile touchscreens, allow native GPU compositor momentum scrolling without software hijacking
+    const isTouch =
+      window.matchMedia("(pointer: coarse)").matches || window.innerWidth < 1024;
+
+    if (!isTouch) {
+      import("lenis").then(({ default: Lenis }) => {
+        const lenis = new Lenis({ duration: 1.1, smoothWheel: true });
+        let id = 0;
+        const raf = (t: number) => {
+          lenis.raf(t);
+          id = requestAnimationFrame(raf);
+        };
         id = requestAnimationFrame(raf);
-      };
-      id = requestAnimationFrame(raf);
-      const click = (ev: MouseEvent) => {
-        const a = (ev.target as HTMLElement).closest<HTMLAnchorElement>('a[href^="#"]');
-        const el = a && document.querySelector(a.getAttribute("href")!);
-        if (el) {
-          ev.preventDefault();
-          lenis.scrollTo(el as HTMLElement, { offset: -70 });
-        }
-      };
-      document.addEventListener("click", click);
-      destroy = () => {
-        cancelAnimationFrame(id);
-        lenis.destroy();
-        document.removeEventListener("click", click);
-      };
-    });
+        const click = (ev: MouseEvent) => {
+          const a = (ev.target as HTMLElement).closest<HTMLAnchorElement>('a[href^="#"]');
+          const el = a && document.querySelector(a.getAttribute("href")!);
+          if (el) {
+            ev.preventDefault();
+            lenis.scrollTo(el as HTMLElement, { offset: -70 });
+          }
+        };
+        document.addEventListener("click", click);
+        destroy = () => {
+          cancelAnimationFrame(id);
+          lenis.destroy();
+          document.removeEventListener("click", click);
+        };
+      });
+    }
     return () => {
       window.removeEventListener("scroll", onScroll);
       io.disconnect();

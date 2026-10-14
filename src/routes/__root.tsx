@@ -78,23 +78,68 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Asterisk Construction" },
+      {
+        title:
+          "Asterisk Construction — Design & Build Contractors in Nairobi, Kenya | Architectural Engineering & Turnkey Projects",
+      },
       {
         name: "description",
         content:
-          "Design-and-build firm in Nairobi, Kenya delivering sustainable residential, commercial and infrastructure projects.",
+          "Asterisk Construction is a premier Nairobi design-and-build firm delivering turnkey luxury mansions, high-rise apartments, and commercial projects across Kenya and Pan-Africa. WhatsApp instant quotation available.",
       },
-      { name: "author", content: "Asterisk Construction" },
-      { property: "og:title", content: "Asterisk Construction" },
+      {
+        name: "keywords",
+        content:
+          "construction company Nairobi, building contractors Kenya, design and build Kenya, civil engineering Nairobi, luxury mansions Kilifi, apartments Juja Kiambu, quantity surveyor Kenya, architectural design Nairobi",
+      },
+      { name: "author", content: "Asterisk Construction Limited" },
+      {
+        name: "robots",
+        content: "index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1",
+      },
+      { property: "og:type", content: "website" },
+      { property: "og:site_name", content: "Asterisk Construction" },
+      { property: "og:locale", content: "en_KE" },
+      { property: "og:url", content: "https://asterisksconstruction.com" },
+      {
+        property: "og:title",
+        content: "Asterisk Construction — Building Africa's Future, Today",
+      },
       {
         property: "og:description",
         content:
-          "Design-and-build firm in Nairobi, Kenya delivering sustainable residential, commercial and infrastructure projects.",
+          "Turnkey architectural design, structural engineering, and sustainable construction across Kenya and Pan-Africa. Explore delivered projects.",
       },
-      { property: "og:type", content: "website" },
+      {
+        property: "og:image",
+        content: "https://asterisksconstruction.com/building-background.jpg",
+      },
+      { property: "og:image:width", content: "1200" },
+      { property: "og:image:height", content: "630" },
+      { property: "og:image:alt", content: "Asterisk Construction High-Rise Tower Nairobi" },
       { name: "twitter:card", content: "summary_large_image" },
+      {
+        name: "twitter:title",
+        content: "Asterisk Construction — Design & Build Firm, Nairobi",
+      },
+      {
+        name: "twitter:description",
+        content:
+          "Engineering Africa's skyline with turnkey residential, commercial, and hospitality developments.",
+      },
+      {
+        name: "twitter:image",
+        content: "https://asterisksconstruction.com/building-background.jpg",
+      },
+      { name: "theme-color", content: "#0d1520" },
     ],
     links: [
+      { rel: "canonical", href: "https://asterisksconstruction.com" },
+      {
+        rel: "preload",
+        href: "/building-background.jpg",
+        as: "image",
+      },
       {
         rel: "stylesheet",
         href: appCss,

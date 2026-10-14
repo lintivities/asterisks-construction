@@ -12,7 +12,7 @@ const budgets = [
 ];
 
 const fieldClass =
-  "min-h-[48px] w-full rounded-sm border border-input bg-background px-4 text-sm text-foreground placeholder:text-muted-foreground";
+  "min-h-[48px] w-full rounded-sm border-2 border-slate-700 bg-slate-900 px-4 text-sm text-white font-medium placeholder:text-slate-400 focus:border-amber-400 focus:outline-none";
 
 export function QuoteForm({ compact = false }: { compact?: boolean }) {
   const [projectType, setProjectType] = useState(projectTypes[0]!);
@@ -27,7 +27,7 @@ export function QuoteForm({ compact = false }: { compact?: boolean }) {
 
   return (
     <form onSubmit={submit} className="grid gap-4">
-      <label className="grid gap-2 text-xs tracking-[0.18em] uppercase text-muted-foreground">
+      <label className="grid gap-2 text-xs font-bold tracking-[0.18em] uppercase text-slate-200">
         Project type
         <select
           value={projectType}
@@ -35,25 +35,25 @@ export function QuoteForm({ compact = false }: { compact?: boolean }) {
           className={fieldClass}
         >
           {projectTypes.map((t) => (
-            <option key={t} value={t}>
+            <option key={t} value={t} className="bg-slate-900 text-white">
               {t}
             </option>
           ))}
         </select>
       </label>
 
-      <label className="grid gap-2 text-xs tracking-[0.18em] uppercase text-muted-foreground">
+      <label className="grid gap-2 text-xs font-bold tracking-[0.18em] uppercase text-slate-200">
         Estimated budget
         <select value={budget} onChange={(e) => setBudget(e.target.value)} className={fieldClass}>
           {budgets.map((b) => (
-            <option key={b} value={b}>
+            <option key={b} value={b} className="bg-slate-900 text-white">
               {b}
             </option>
           ))}
         </select>
       </label>
 
-      <label className="grid gap-2 text-xs tracking-[0.18em] uppercase text-muted-foreground">
+      <label className="grid gap-2 text-xs font-bold tracking-[0.18em] uppercase text-slate-200">
         Location
         <input
           value={location}
@@ -64,7 +64,7 @@ export function QuoteForm({ compact = false }: { compact?: boolean }) {
       </label>
 
       {!compact && (
-        <label className="grid gap-2 text-xs tracking-[0.18em] uppercase text-muted-foreground">
+        <label className="grid gap-2 text-xs font-bold tracking-[0.18em] uppercase text-slate-200">
           Project details (optional)
           <textarea
             value={notes}
@@ -76,7 +76,7 @@ export function QuoteForm({ compact = false }: { compact?: boolean }) {
         </label>
       )}
 
-      <button type="submit" className="btn-base btn-primary mt-2 w-full">
+      <button type="submit" className="btn-base btn-primary mt-2 w-full font-bold shadow-md">
         <WaIcon className="h-4 w-4" />
         Send on WhatsApp
       </button>
