@@ -35,13 +35,12 @@ const rollVertexShader = /* glsl */ `
     // Dynamic curl boundary line Y:
     // When uFoldProgress = 0.0 (top of page), curlY is placed above the container so entire sheet is flat.
     // As uFoldProgress rises to 1.0, curlY descends, curling the paper forward into the 3D roll.
-    float foldFlex = clamp(uScrollDelta * 8.0, -6.0, 0.0);
     float R_base = uBaseRadius * (1.0 - 0.16 * uProgress);
 
     // Initial flat position: curlY above top edge so s <= 0 everywhere (sheet completely flat on screen)
     float flatCurlY = topScreenY + 25.0;
     // Fully folded pinned position: top apex of roll (curlY + R_base) sits at topScreenY
-    float foldedCurlY = topScreenY - R_base + foldFlex;
+    float foldedCurlY = topScreenY - R_base;
 
     float curlY = mix(flatCurlY, foldedCurlY, uFoldProgress);
 
@@ -296,7 +295,7 @@ export function PinnedTopRollCanvas() {
       // Sticky behavior: sticks below the sticky wood navbar (dynamic height with mobile menu expansion)
       const navEl = document.getElementById("site-wood-navbar");
       const navBottom = navEl ? navEl.getBoundingClientRect().bottom : 64;
-      const topPadding = Math.round(navBottom + 4);
+      const topPadding = Math.round(navBottom);
       let rollTop = Math.max(topPadding, r.top);
 
       // Unpin near the bottom so roll never invades bottom desk padding
@@ -306,7 +305,7 @@ export function PinnedTopRollCanvas() {
       }
 
       // Check if mobile menu is actively pushing down into the canvas:
-      // When menu opens, navBottom expands from 64px to ~380px.
+      // When menu opens, navBottom expands from 64px to ~450px.
       // If navBottom + 8 > r.top, menu is pushing into the paper sheet!
       const menuPush = Math.max(0.0, navBottom + 8.0 - r.top);
       const menuFoldProgress = Math.min(1.0, menuPush / 80.0);
@@ -317,11 +316,11 @@ export function PinnedTopRollCanvas() {
       }
 
       // Viewport Wood Occluder Shield:
-      // Spans from top: 0 down to rollTop across the full viewport width.
-      // Keeps the area above the 3D roll and behind the navbar completely covered in fixed wood table texture.
+      // Spans from top: 0 down to rollTop + 2px across the full viewport width.
+      // Keeps the area above the 3D roll and behind the navbar completely covered.
       // Physically guarantees zero-peeking during rapid flick scrolling!
       if (topOccluderRef.current) {
-        topOccluderRef.current.style.height = `${Math.max(0, rollTop)}px`;
+        topOccluderRef.current.style.height = `${Math.max(0, rollTop + 2)}px`;
         topOccluderRef.current.style.opacity = currentFoldProgress > 0.01 ? "1" : "0";
       }
 
@@ -334,10 +333,9 @@ export function PinnedTopRollCanvas() {
 
       // Synchronize exact curl boundary line matching rollVertexShader
       const topScreenY = containerH * 0.5;
-      const foldFlex = Math.max(-6.0, Math.min(0.0, scrollVelocity * 8.0));
       const R_base = baseRadius * (1.0 - 0.16 * currentProgress);
       const flatCurlY = topScreenY + 25.0;
-      const foldedCurlY = topScreenY - R_base + foldFlex;
+      const foldedCurlY = topScreenY - R_base;
       const curlY = flatCurlY + (foldedCurlY - flatCurlY) * currentFoldProgress;
 
       // In viewport screen coordinates, the 3D roll's contact line is at:
@@ -352,19 +350,10 @@ export function PinnedTopRollCanvas() {
       shadowRef.current.style.left = `${canvasLeft + 24}px`;
       shadowRef.current.style.width = `${canvasW - 48}px`;
 
-      // Absolute guarantee: NO unfolded canvas ever appears above rollTop or the roll contact line!
-      // Flat canvas extends 12px underneath the solid roll contact line to guarantee zero detachment gap:
-      const curlCut = screenCurlY - r.top - 12.0;
-
-      if (currentFoldProgress <= 0.005 && r.top >= rollTop) {
-        // Completely flat at resting position safely below the navbar
-        pEl.style.clipPath = "none";
-        if (wrapEl) wrapEl.style.clipPath = "none";
-      } else {
-        const cutTop = Math.max(0, Math.round(curlCut));
-        pEl.style.clipPath = `inset(${cutTop}px 0 0 0)`;
-        if (wrapEl) wrapEl.style.clipPath = `inset(${cutTop}px 0 0 0)`;
-      }
+      // Folio paper sheet remains continuous and fully intact underneath the 3D roll,
+      // completely eliminating any compositor lag detachment during high-speed upward flick scrolling!
+      if (pEl.style.clipPath !== "none") pEl.style.clipPath = "none";
+      if (wrapEl && wrapEl.style.clipPath !== "none") wrapEl.style.clipPath = "none";
     }
 
     function updateDimensions() {
@@ -397,7 +386,7 @@ export function PinnedTopRollCanvas() {
 
       // Deep multi-turn coil length tucking the inner termination safely inside the roll core
       const rollSheetLength = baseRadius * 11.5;
-      const lipLength = 24.0;
+      const lipLength = 16.0;
       const totalH = rollSheetLength + lipLength;
 
       if (mesh) {
@@ -607,7 +596,7 @@ export function PinnedTopRollCanvas() {
       <div
         ref={topOccluderRef}
         id="site-bg-top-occluder"
-        className="fixed top-0 left-0 right-0 z-35 pointer-events-none bg-[#0d1520] transition-opacity duration-150"
+        className="fixed top-0 left-0 right-0 z-35 pointer-events-none bg-[#0d1520]"
         style={{ height: 0, opacity: 0 }}
         aria-hidden="true"
       />
