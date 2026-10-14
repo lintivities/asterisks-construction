@@ -10,8 +10,8 @@ const steps = [
 
 export function Quotation() {
   return (
-    <section id="quotation" className="border-t border-border bg-[#151c24]/95 text-white">
-      <div className="container-shell grid gap-12 py-20 lg:grid-cols-[minmax(0,1fr)_minmax(0,0.85fr)] lg:py-28">
+    <section id="quote" className="border-t border-border bg-[#151c24]/95 text-white">
+      <div className="container-shell grid gap-12 pt-20 pb-28 lg:py-28 lg:grid-cols-[minmax(0,1fr)_minmax(0,0.85fr)]">
         <div>
           <p className="eyebrow text-accent font-bold tracking-[0.2em] uppercase">Quotation Calculator</p>
           <h2 className="text-fluid-section mt-5 max-w-[22ch] font-black text-white">

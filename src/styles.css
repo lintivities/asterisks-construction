@@ -251,3 +251,9 @@
     mask-size: 40px 512px, 40px 512px, calc(100% - 78px) 100%;
   }
 }
+
+/* Offset for in-page navigation anchors to clear sticky carved navbar */
+section[id] {
+  scroll-margin-top: 5.5rem;
+}
+
