@@ -18,7 +18,7 @@ export function CarvedWoodNavbar() {
   return (
     <header
       id="site-wood-navbar"
-      className="fixed top-0 left-0 right-0 z-50 transition-all duration-300 ease-out select-none bg-transparent"
+      className="fixed top-0 left-0 right-0 z-50 transition-all duration-300 ease-out select-none bg-[#0d1520] border-b border-[#243040]/80 shadow-md"
     >
       {/* Main Bar */}
       <div className="relative z-10 max-w-[1560px] mx-auto px-4 sm:px-6 md:px-10 lg:px-14 h-16 flex items-center justify-between">
@@ -90,7 +90,15 @@ export function CarvedWoodNavbar() {
         {/* Mobile Hamburger Button */}
         <button
           type="button"
-          onClick={() => setIsOpen((prev) => !prev)}
+          onClick={() => {
+            setIsOpen((prev) => {
+              const next = !prev;
+              if (typeof window !== "undefined") {
+                window.dispatchEvent(new CustomEvent("navbar-toggle", { detail: { open: next } }));
+              }
+              return next;
+            });
+          }}
           aria-expanded={isOpen}
           aria-label={isOpen ? "Close navigation menu" : "Open navigation menu"}
           className="lg:hidden relative grid h-10 w-10 place-items-center rounded-sm transition-all focus:outline-none"
@@ -134,7 +142,7 @@ export function CarvedWoodNavbar() {
       {/* Mobile Menu Drawer on Wood Surface (Smooth expansion pushing down the canvas) */}
       <div
         className={`lg:hidden overflow-hidden transition-all duration-300 ease-in-out ${
-          isOpen ? "max-h-[380px] opacity-100" : "max-h-0 opacity-0 pointer-events-none"
+          isOpen ? "max-h-[460px] opacity-100" : "max-h-0 opacity-0 pointer-events-none"
         }`}
       >
         <div className="relative z-10 px-5 pt-3 pb-6 flex flex-col gap-1">
@@ -142,7 +150,12 @@ export function CarvedWoodNavbar() {
             <a
               key={link.href}
               href={link.href}
-              onClick={() => setIsOpen(false)}
+              onClick={() => {
+                setIsOpen(false);
+                if (typeof window !== "undefined") {
+                  window.dispatchEvent(new CustomEvent("navbar-toggle", { detail: { open: false } }));
+                }
+              }}
               className="py-2.5 px-3 text-sm font-black uppercase tracking-[0.18em] text-[#ffffff] hover:text-[#ff8e5a] rounded-sm transition-colors flex items-center justify-between"
               style={{
                 textShadow:
@@ -158,7 +171,12 @@ export function CarvedWoodNavbar() {
             href={whatsappLink()}
             target="_blank"
             rel="noreferrer"
-            onClick={() => setIsOpen(false)}
+            onClick={() => {
+              setIsOpen(false);
+              if (typeof window !== "undefined") {
+                window.dispatchEvent(new CustomEvent("navbar-toggle", { detail: { open: false } }));
+              }
+            }}
             className="mt-3 flex items-center justify-center gap-2 rounded-sm bg-[#c85a32] hover:bg-[#b85428] px-4 py-3 text-xs font-bold uppercase tracking-wider text-white shadow-lg transition-all"
             style={{
               boxShadow:

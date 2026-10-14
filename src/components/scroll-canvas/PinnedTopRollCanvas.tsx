@@ -425,15 +425,35 @@ export function PinnedTopRollCanvas() {
 
     window.addEventListener("resize", updateDimensions);
 
-    // ResizeObserver on the paper canvas element to guarantee continuous 1:1 width sync
+    // ResizeObserver on both the paper canvas folio and wood navbar to guarantee continuous sync
     let resizeObserver: ResizeObserver | null = null;
     const paperEl = document.getElementById("paper-canvas-folio");
-    if (paperEl && typeof ResizeObserver !== "undefined") {
+    const navEl = document.getElementById("site-wood-navbar");
+    if (typeof ResizeObserver !== "undefined") {
       resizeObserver = new ResizeObserver(() => {
+        markDirty();
         updateDimensions();
       });
-      resizeObserver.observe(paperEl);
+      if (paperEl) resizeObserver.observe(paperEl);
+      if (navEl) resizeObserver.observe(navEl);
     }
+
+    // Dynamic RAF tracking during mobile menu drawer expand/collapse animation
+    const onNavbarToggle = () => {
+      markDirty();
+      const startTime = performance.now();
+      const duration = 380;
+      const step = (now: number) => {
+        markDirty();
+        updateRollPosition();
+        if (now - startTime < duration) {
+          requestAnimationFrame(step);
+        }
+      };
+      requestAnimationFrame(step);
+    };
+
+    window.addEventListener("navbar-toggle", onNavbarToggle);
 
     updateDimensions();
 
@@ -567,6 +587,7 @@ export function PinnedTopRollCanvas() {
       cancelAnimationFrame(animationFrameId);
       window.removeEventListener("resize", updateDimensions);
       window.removeEventListener("scroll", handleScroll);
+      window.removeEventListener("navbar-toggle", onNavbarToggle);
       if (resizeObserver) resizeObserver.disconnect();
       if (mesh) mesh.geometry.dispose();
       shaderMaterial.dispose();
