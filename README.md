@@ -22,3 +22,13 @@ cd <repository-name>
 npm i
 npm run dev
 ```
+
+## Deployment on Vercel
+
+This application is built with **TanStack Start** and **Nitro**. When deploying to [Vercel](https://vercel.com/):
+
+1. Import this repository in the Vercel dashboard.
+2. Vercel automatically detects the project using Nitro and the Vercel Build Output API.
+3. Build command: `npm run build`
+4. Output directory: Default / empty (Nitro automatically outputs to `.vercel/output`).
+5. Ensure the Node.js version is set to 20.x or 22.x (configured in `package.json` engines).
