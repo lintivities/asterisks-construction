@@ -1,67 +1,44 @@
-const pillars = [
-  {
-    title: "Vision",
-    body: "To be the trusted leader in shaping Africa's built environment through efficient, innovative and sustainable development that exists in balance with the natural environment and communities we serve.",
-  },
-  {
-    title: "Mission",
-    body: "To deliver high quality, reliable and value driven construction solutions that exceed client expectations, while fostering the professional growth, wellbeing and long-term careers of our people.",
-  },
-];
-
 const values = [
-  "Innovation",
-  "Integrity",
-  "Quality assurance",
-  "Timely delivery",
-  "Social responsibility",
+  "Quality Workmanship",
+  "Transparent Pricing",
+  "On-Time Completion",
+  "Safety First",
+  "Reliable Delivery",
 ];
 
 export function About() {
   return (
     <section id="about" className="border-t border-border bg-surface text-surface-foreground">
-      <div className="container-shell grid gap-14 py-20 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,1fr)] lg:py-28">
+      <div className="container-shell grid gap-10 py-16 lg:grid-cols-[1.1fr_0.9fr] lg:py-20 items-center">
         <div>
-          <p className="eyebrow text-primary font-black tracking-widest uppercase">
-            Established 2025
+          <p className="eyebrow text-primary font-bold tracking-widest uppercase">
+            About Asterisk Construction
           </p>
-          <h2 className="text-fluid-section mt-5 font-black text-slate-950">
-            A design-and-build firm engineered around efficiency.
+          <h2 className="text-fluid-section mt-3 font-black text-slate-950">
+            Reliable design &amp; build contractors you can count on.
           </h2>
-          <p className="text-fluid-body mt-6 text-slate-800 font-medium leading-relaxed">
-            Asterisk Construction is a limited liability company designing and constructing
-            infrastructure projects, residential and commercial buildings. We are based in Nairobi,
-            Kenya and undertake works across Africa.
+          <p className="text-fluid-body mt-5 text-slate-800 font-medium leading-relaxed">
+            Asterisk Construction is a licensed building and design contractor based in Nairobi, Kenya. We design and build modern family homes, mansions, residential apartments, and commercial developments across Kenya and East Africa.
           </p>
-          <p className="text-fluid-body mt-4 text-slate-800 font-medium leading-relaxed">
-            Our designs are optimised for operational efficiency while providing adequate space for
-            current and future needs. Construction is delivered on schedule and on budget, largely
-            with local labour, full PPE provision, onsite health officers, safety training and
-            insurance cover for every worker and visitor.
-          </p>
-          <p className="text-fluid-body mt-4 text-slate-800 font-medium leading-relaxed">
-            Green building elements reduce the energy each structure needs to operate, and we partner
-            with NGOs and CBOs working on environmental sustainability.
+          <p className="text-fluid-body mt-3 text-slate-700 leading-relaxed">
+            From initial house plans and county permits to the final keys in your hand, we handle the entire project under one team. Our commitment is straightforward: top quality construction, transparent budgets with zero surprises, and dependable delivery on schedule.
           </p>
         </div>
 
-        <div className="grid gap-5 self-start">
-          {pillars.map((p) => (
-            <article
-              key={p.title}
-              className="border-l-4 border-primary bg-white/95 shadow-xs p-6 sm:p-8"
-            >
-              <h3 className="font-display text-xl font-bold text-slate-950">{p.title}</h3>
-              <p className="mt-3 text-sm leading-relaxed text-slate-700 font-normal">{p.body}</p>
-            </article>
-          ))}
-          <div className="flex flex-wrap gap-2">
+        <div className="grid gap-4 bg-white/95 p-6 sm:p-8 border-2 border-slate-200 shadow-sm rounded-sm">
+          <div>
+            <h3 className="font-display text-lg font-bold text-slate-950">Our Promise to You</h3>
+            <p className="mt-2 text-sm text-slate-700 leading-relaxed">
+              We treat every build like our own. We use certified materials, skilled local craftsmen, and experienced project managers to ensure your home or commercial property is built to last.
+            </p>
+          </div>
+          <div className="pt-4 border-t border-slate-200 flex flex-wrap gap-2">
             {values.map((v) => (
               <span
                 key={v}
-                className="rounded-full border-2 border-slate-900 bg-white px-4 py-2 text-xs font-black tracking-[0.14em] uppercase text-slate-950"
+                className="rounded-full border border-slate-300 bg-slate-50 px-3 py-1.5 text-xs font-bold text-slate-800"
               >
-                {v}
+                ✓ {v}
               </span>
             ))}
           </div>
