@@ -22,7 +22,7 @@ export function Header() {
   }, [open]);
 
   return (
-    <header data-site-header className="glass-header site-header fixed inset-x-0 top-0 z-50 border-b border-accent/60">
+    <header data-site-header className="site-header fixed inset-x-0 top-0 z-50 bg-transparent border-b border-transparent">
       <div className="container-shell grid grid-cols-[minmax(0,1fr)_auto] items-center gap-4 py-3 lg:py-4">
         <a href="#top" className="flex min-w-0 items-center gap-3">
           <span className="grid h-10 w-10 shrink-0 place-items-center rounded-sm bg-primary font-display text-xl font-bold text-primary-foreground">
@@ -36,12 +36,12 @@ export function Header() {
           </span>
         </a>
 
-        <nav className="hidden items-center gap-7 xl:flex">
+        <nav className="hidden items-center gap-7 xl:flex bg-transparent">
           {links.map((l) => (
             <a
               key={l.href}
               href={l.href}
-              className="nav-link text-sm text-muted-foreground transition-colors hover:text-accent"
+              className="nav-link text-sm text-muted-foreground transition-colors hover:text-accent bg-transparent"
             >
               {l.label}
             </a>
@@ -57,7 +57,7 @@ export function Header() {
           onClick={() => setOpen((v) => !v)}
           aria-expanded={open}
           aria-label={open ? "Close menu" : "Open menu"}
-          className="grid h-12 w-12 place-items-center rounded-sm border border-border xl:hidden"
+          className="grid h-12 w-12 place-items-center rounded-sm border border-border bg-transparent xl:hidden"
         >
           <span className="relative block h-3 w-5">
             <span
@@ -71,14 +71,14 @@ export function Header() {
       </div>
 
       {open && (
-        <div className="border-t border-border bg-background xl:hidden">
-          <nav className="container-shell flex flex-col py-2">
+        <div className="border-t border-border bg-transparent xl:hidden">
+          <nav className="container-shell flex flex-col py-2 bg-transparent">
             {links.map((l) => (
               <a
                 key={l.href}
                 href={l.href}
                 onClick={() => setOpen(false)}
-                className="flex min-h-[48px] items-center border-b border-border/60 text-base text-foreground/90"
+                className="flex min-h-[48px] items-center border-b border-border/60 text-base text-foreground/90 bg-transparent"
               >
                 {l.label}
               </a>

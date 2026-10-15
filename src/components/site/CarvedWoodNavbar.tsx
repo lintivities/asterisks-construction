@@ -112,25 +112,22 @@ export function CarvedWoodNavbar() {
         >
           <div className="relative w-5 h-4 flex flex-col justify-between items-center">
             <span
-              className={`block h-0.5 w-full bg-[#f7f2ea] rounded-full transition-transform duration-300 ${
-                isOpen ? "translate-y-[7px] rotate-45" : ""
-              }`}
+              className={`block h-0.5 w-full bg-[#f7f2ea] rounded-full transition-transform duration-300 ${isOpen ? "translate-y-[7px] rotate-45" : ""
+                }`}
               style={{
                 boxShadow: "0 1px 1px rgba(0, 0, 0, 0.8)",
               }}
             />
             <span
-              className={`block h-0.5 w-full bg-[#f7f2ea] rounded-full transition-opacity duration-200 ${
-                isOpen ? "opacity-0" : "opacity-100"
-              }`}
+              className={`block h-0.5 w-full bg-[#f7f2ea] rounded-full transition-opacity duration-200 ${isOpen ? "opacity-0" : "opacity-100"
+                }`}
               style={{
                 boxShadow: "0 1px 1px rgba(0, 0, 0, 0.8)",
               }}
             />
             <span
-              className={`block h-0.5 w-full bg-[#f7f2ea] rounded-full transition-transform duration-300 ${
-                isOpen ? "-translate-y-[7px] -rotate-45" : ""
-              }`}
+              className={`block h-0.5 w-full bg-[#f7f2ea] rounded-full transition-transform duration-300 ${isOpen ? "-translate-y-[7px] -rotate-45" : ""
+                }`}
               style={{
                 boxShadow: "0 1px 1px rgba(0, 0, 0, 0.8)",
               }}
@@ -141,9 +138,8 @@ export function CarvedWoodNavbar() {
 
       {/* Mobile Menu Drawer on Wood Surface (Smooth expansion pushing down the canvas) */}
       <div
-        className={`lg:hidden overflow-hidden transition-all duration-300 ease-in-out ${
-          isOpen ? "max-h-[460px] opacity-100" : "max-h-0 opacity-0 pointer-events-none"
-        }`}
+        className={`lg:hidden overflow-hidden transition-all duration-300 ease-in-out ${isOpen ? "max-h-[460px] opacity-100" : "max-h-0 opacity-0 pointer-events-none"
+          }`}
       >
         <div className="relative z-10 px-5 pt-3 pb-6 flex flex-col gap-1">
           {navLinks.map((link) => (

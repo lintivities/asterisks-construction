@@ -596,7 +596,7 @@ export function PinnedTopRollCanvas() {
       <div
         ref={topOccluderRef}
         id="site-bg-top-occluder"
-        className="fixed top-0 left-0 right-0 z-35 pointer-events-none bg-[#0d1520]"
+        className="fixed top-0 left-0 right-0 z-35 pointer-events-none bg-transparent"
         style={{ height: 0, opacity: 0 }}
         aria-hidden="true"
       />

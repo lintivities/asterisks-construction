@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { SpiralLoader } from "@/components/site/SpiralLoader";
 import { Hero } from "@/components/site/hero";
 import { About } from "@/components/site/about";
 import { Projects } from "@/components/site/projects";
@@ -62,6 +63,9 @@ export const Route = createFileRoute("/")({
 function Index() {
   return (
     <>
+      {/* Minimal Mathematical Spiral Loading Screen (Zero AI Jargon) */}
+      <SpiralLoader />
+
       {/* Schema.org JSON-LD Structured Data for Google Rich Snippets */}
       <SeoSchema />
 
