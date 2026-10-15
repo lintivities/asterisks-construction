@@ -73,12 +73,21 @@ export function Hero() {
         </p>
 
         <div className="mt-9 flex flex-col gap-3 sm:flex-row">
-          <a href={whatsappLink()} target="_blank" rel="noreferrer" className="btn-base btn-primary font-bold shadow-md">
+          <a
+            href={whatsappLink()}
+            target="_blank"
+            rel="noreferrer"
+            className="btn-base btn-primary font-bold shadow-md inline-flex items-center justify-center gap-2"
+          >
             <WaIcon className="h-4 w-4" />
             Request Quote via WhatsApp
           </a>
-          <a href="#projects" className="btn-base btn-outline font-bold border-white/60 text-white hover:bg-white hover:text-slate-950">
-            View Projects
+          <a
+            href="/gallery"
+            className="btn-base btn-outline font-bold border-white/70 text-white hover:bg-white hover:text-slate-950 inline-flex items-center justify-center gap-2"
+          >
+            <span>View Developments Gallery</span>
+            <span aria-hidden="true">→</span>
           </a>
         </div>
 
