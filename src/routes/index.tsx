@@ -2,11 +2,9 @@ import { createFileRoute } from "@tanstack/react-router";
 import { SpiralLoader } from "@/components/site/SpiralLoader";
 import { Hero } from "@/components/site/hero";
 import { About } from "@/components/site/about";
-import { Projects } from "@/components/site/projects";
 import { Services } from "@/components/site/services";
 import { Benchmarks } from "@/components/site/benchmarks";
 import { Team } from "@/components/site/team";
-import { Quotation } from "@/components/site/quotation";
 import { Footer } from "@/components/site/footer";
 import { Motion } from "@/components/site/motion";
 import { FloatingWhatsApp } from "@/components/site/floating-whatsapp";
@@ -84,11 +82,9 @@ function Index() {
           <Hero />
           <About />
           <Services />
-          <Projects />
           <Benchmarks />
           <Team />
           <Faq />
-          <Quotation />
         </main>
         <Footer />
       </PaperFolioContainer>
