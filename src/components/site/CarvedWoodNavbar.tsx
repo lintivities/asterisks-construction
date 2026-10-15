@@ -3,13 +3,12 @@ import { whatsappLink } from "@/lib/whatsapp";
 import { WaIcon } from "./wa-icon";
 
 const navLinks = [
-  { href: "#about", label: "About" },
-  { href: "#services", label: "Services" },
-  { href: "#projects", label: "Projects" },
-  { href: "#benchmarks", label: "Benchmarks" },
-  { href: "#team", label: "Team" },
-  { href: "#faq", label: "FAQ" },
-  { href: "#quote", label: "Quote" },
+  { href: "/#about", label: "About" },
+  { href: "/#services", label: "Services" },
+  { href: "/gallery", label: "Gallery" },
+  { href: "/#benchmarks", label: "Benchmarks" },
+  { href: "/#team", label: "Team" },
+  { href: "/#faq", label: "FAQ" },
 ];
 
 export function CarvedWoodNavbar() {
@@ -23,7 +22,7 @@ export function CarvedWoodNavbar() {
       {/* Main Bar */}
       <div className="relative z-10 max-w-[1560px] mx-auto px-4 sm:px-6 md:px-10 lg:px-14 h-16 flex items-center justify-between">
         {/* Brand Stamp: Physical carved insignia with painted enamel */}
-        <a href="#top" className="flex items-center gap-3 group">
+        <a href="/" className="flex items-center gap-3 group">
           <div
             className="grid h-10 w-10 shrink-0 place-items-center rounded-sm bg-[#c85a32] text-white font-display text-xl font-bold transition-transform group-hover:scale-105"
             style={{
