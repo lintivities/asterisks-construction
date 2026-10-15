@@ -37,8 +37,9 @@
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
-  --font-display: "Syne", "Montserrat", sans-serif;
-  --font-sans: "Inter", system-ui, sans-serif;
+  --font-display: "Calibri", "Carlito", "Candara", "Segoe UI", system-ui, sans-serif;
+  --font-sans: "Calibri", "Carlito", "Candara", "Segoe UI", system-ui, sans-serif;
+  --font-mono: "Calibri", "Carlito", "Candara", "Segoe UI", monospace;
 }
 
 :root {
